@@ -1,35 +1,47 @@
 const express = require("express");
-const morgan= require("morgan");
+const morgan = require("morgan");
 const config = require("./config");
 const app = express();
 const componentes = require('./modulos/componentes/rutas');
 const error = require("./red/errors");
-var cors = require('cors');
-//
-app.use(cors());
-//CONFIGURAR CABECERAS Y CORDS
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-  //res.header("Access-Control-Allow-Origin", "https://55f4-189-253-241-196.ngrok-free.app");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  
-  next();
-});
+const cors = require('cors');
 
-//MIDDLEWARES
+// Configuración de CORS
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://controiinventariodeveloper.onrender.com"
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir solicitudes sin origen (por ejemplo, desde Postman)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept"]
+};
+
+// Usar el middleware CORS con las opciones configuradas
+app.use(cors(corsOptions));
+
+// MIDDLEWARES
 app.use(morgan('dev'));
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-//CONFIGURACION 
-app.set('port', config.app.port)
+app.use(express.urlencoded({ extended: true }));
 
-//RUTAS
-app.use('/api/componentes',componentes);
+// CONFIGURACION 
+app.set('port', config.app.port);
+
+// RUTAS
+app.use('/api/componentes', componentes);
 
 app.use(error);
 
-
 module.exports = app;
+
 //const mysql= require("mysql2");
 //require('dotenv').config()
 //var cors = require('cors');
