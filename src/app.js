@@ -2,9 +2,13 @@ const express = require("express");
 const morgan = require("morgan");
 const config = require("./config");
 const app = express();
-const componentes = require('./modulos/componentes/rutas');
 const error = require("./red/errors");
 const cors = require('cors');
+const componentes = require('./modulos/componentes/rutas');
+const unidades = require('./modulos/unidades/rutas');
+const areas = require('./modulos/Areas/rutas');
+const dispositivos = require('./modulos/Dispositivos/rutas');
+const catalogos_componentes = require('./modulos/Catalogos/rutas');
 
 // Configuración de CORS
 const allowedOrigins = [
@@ -37,6 +41,10 @@ app.set('port', config.app.port);
 
 // RUTAS
 app.use('/api/componentes', componentes);
+app.use('/api/unidades', unidades);
+app.use('/api/areas', areas);
+app.use('/api/dispositivos', dispositivos);
+app.use('/api/CatalogosComponentes', catalogos_componentes);
 
 app.use(error);
 
