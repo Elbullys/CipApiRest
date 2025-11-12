@@ -1,7 +1,9 @@
 const db= require('../../DB/conexion');
-
+//COMPONENTES
 const TABLA= 'componentes';
-
+/**//////////////////////////////////////////////////////////////////////////////////////////////////// */
+//consulta
+/**//////////////////////////////////////////////////////////////////////////////////////////////////// */
 function consulta_componente(){
     return db.consulta_componente(TABLA);
 }
@@ -39,12 +41,20 @@ async function ctl_consulta_Id_Componente(id_componente){
      return db.consulta_id_componente(TABLA, id_componente); 
 }
 
-
-
+/**//////////////////////////////////////////////////////////////////////////////////////////////////// */
+//UPDATE
+/**//////////////////////////////////////////////////////////////////////////////////////////////////// */
+function ctl_Editar_ComponenteFactura( idComponente, data) {
+    return db.EditarComponenteFactura(TABLA, idComponente, data);
+}
 
 module.exports = {
+    //CONSULTA
     ctl_consulta_CodigoTI_Num_Serie,
     consulta_componente,
     ctl_verificar_id_componente_QR_Num_Serie,
-    ctl_consulta_Id_Componente
+    ctl_consulta_Id_Componente,
+
+    //UPDATE
+    ctl_Editar_ComponenteFactura
 }

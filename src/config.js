@@ -8,5 +8,9 @@ module.exports={
         user:process.env.USER||'root', 
         password:process.env.PASSWORD||'root',
         database:process.env.DBNAME||'db'
-    }
-}
+    },
+        salt_rounds: process.env.SALT_ROUNDS || 20,
+        secret_jwt_key:process.env.SECRET_JWT_KEY,
+        secure_cookie:process.env.SECURE_COOKIE === 'true', // Convertir a booleano
+
+};

@@ -6,7 +6,10 @@ async function consulta_componente(tabla) {
   try {
     connection = await getConnection(); // Obtener conexión del pool
 
-    
+    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+    /*COMPONENTES*/
+    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+    /** CONSULTAS */
     // Realizar la consulta
     const [result] = await connection.query(`
       SELECT U.id_unidad, U.nombre_unidad, D.tipo_equipo, M.marca, M.modelo,
@@ -33,7 +36,7 @@ async function consulta_componente(tabla) {
 }
 
 async function consulta_NumSerie_CodigoTI(tabla, databusqueda) {
-  console.log("databusqueda en db", databusqueda);  
+
   let connection;
   try {
     connection = await getConnection(); // Obtener conexión del pool
@@ -70,6 +73,7 @@ async function consulta_NumSerie_CodigoTI(tabla, databusqueda) {
   }
 }
 
+
 async function Verificar_Existencia_componente(tabla, databusqueda) {
   let connection;
   try {
@@ -89,7 +93,7 @@ async function Verificar_Existencia_componente(tabla, databusqueda) {
 }
 
 async function consulta_id_componente(tabla, id_componente) {
- 
+
   let connection;
   try {
     connection = await getConnection(); // Obtener conexión del pool
@@ -126,8 +130,37 @@ async function consulta_id_componente(tabla, id_componente) {
   }
 }
 
+//UPDTATE
+async function EditarComponenteFactura(tabla, idComponente, data) {
+  let connection;
 
-//UNIDADES
+  try {
+    const { idFactura } = data;
+    console.log("data recibida en db:", data);
+    console.log("id_factura recibida en db:", idFactura);
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      UPDATE ${tabla} 
+      SET FK_Factura= ? 
+      WHERE id_componente = ?
+    `, [idFactura, idComponente]);
+    return result; // Retorna el resultado de la consulta
+  }
+
+  catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/*UNIDADES*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/** CONSULTAS */
+
 async function consulta_Por_Unidad(tabla, databusqueda) {
   let connection;
   try {
@@ -142,10 +175,10 @@ async function consulta_Por_Unidad(tabla, databusqueda) {
       ) WHERE U.id_unidad = ? OR U.nombre_unidad LIKE ?
       ORDER BY id_unidad ASC
     `, [databusqueda, '%' + databusqueda + '%']);
-    
+
     console.log("result", result);
     return result; // Retorna el resultado de la consulta
-   
+
   } catch (error) {
     console.error("[db error]", error);
     throw error; // Lanza el error para manejarlo más arriba
@@ -156,11 +189,15 @@ async function consulta_Por_Unidad(tabla, databusqueda) {
   }
 }
 
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/*AREAS*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/** CONSULTAS */
 
-//AREAS
+
 //PERMITE REALIZAR BUSQUEDA ESPECIFICA DE AREAS DONDE COINCIDA EL TIPO DE UNIDAD
-async function consulta_Area_Por_TipoUnidad(tabla, TipoUnidad,searchTerm) {
-  
+async function consulta_Area_Por_TipoUnidad(tabla, TipoUnidad, searchTerm) {
+
   let connection;
   try {
     connection = await getConnection(); // Obtener conexión del pool
@@ -168,7 +205,7 @@ async function consulta_Area_Por_TipoUnidad(tabla, TipoUnidad,searchTerm) {
       SELECT A.id_area,A.area,A.tipo_unidad,A.DescripcionArea
       FROM ${tabla} A
       WHERE A.area LIKE ? AND A.tipo_unidad = ? AND A.Status = 'ACTIVO' 
-    `, [ '%'+ searchTerm +'%',TipoUnidad]);
+    `, ['%' + searchTerm + '%', TipoUnidad]);
 
     return result; // Retorna el resultado de la consulta
   } catch (error) {
@@ -182,7 +219,7 @@ async function consulta_Area_Por_TipoUnidad(tabla, TipoUnidad,searchTerm) {
 }
 //PERMITE REALIZAR EL MUESTREO DE TODAS LAS AREAS EXISTENTES DONDE COINCIDA EL TIPO DE UNIDAD
 async function consulta_Todas_Areas_Por_TipoUnidad(tabla, TipoUnidad) {
-  
+
   let connection;
   try {
     connection = await getConnection(); // Obtener conexión del pool
@@ -203,8 +240,12 @@ async function consulta_Todas_Areas_Por_TipoUnidad(tabla, TipoUnidad) {
     }
   }
 }
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/*DISPOSITIVOS*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/** CONSULTAS */
 
-//DISPOSITIVOS
+
 async function consulta_TODOS_dispositivos(tabla) {
 
   let connection;
@@ -228,7 +269,7 @@ async function consulta_TODOS_dispositivos(tabla) {
   }
 }
 
-async function consulta_Por_Dispositivo_Busqueda(tabla,searchTerm) {
+async function consulta_Por_Dispositivo_Busqueda(tabla, searchTerm) {
 
   let connection;
   try {
@@ -238,7 +279,7 @@ async function consulta_Por_Dispositivo_Busqueda(tabla,searchTerm) {
       SELECT id_dispositivo,tipo_equipo,abreviatura_tipo,descripcion_equipo,CaracteristicasAdicionales 
       FROM ${tabla} D 
       WHERE  status_dispositivos = 'ACTIVO' AND tipo_equipo LIKE ? ORDER BY tipo_equipo ASC
-    `, [ '%'+ searchTerm +'%']);
+    `, ['%' + searchTerm + '%']);
 
     return result; // Retorna el resultado de la consulta
   } catch (error) {
@@ -250,10 +291,13 @@ async function consulta_Por_Dispositivo_Busqueda(tabla,searchTerm) {
     }
   }
 }
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/*CATALOGO COMPONENTES*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/** CONSULTAS */
 
-//CATALOGO COMPONENTES
-async function consulta_Catalogos_Por_Dispositivo_Busqueda(tabla, IdDispositivo,searchTerm) {
-  
+async function consulta_Catalogos_Por_Dispositivo_Busqueda(tabla, IdDispositivo, searchTerm) {
+
   let connection;
   try {
     connection = await getConnection(); // Obtener conexión del pool
@@ -272,7 +316,7 @@ async function consulta_Catalogos_Por_Dispositivo_Busqueda(tabla, IdDispositivo,
           AND (CC.nombre_catalogo LIKE ? OR M.marca LIKE ? OR M.modelo LIKE ?)
           ORDER BY CC.nombre_catalogo ASC
            
-    `, [IdDispositivo,'%'+ searchTerm +'%','%'+ searchTerm +'%','%'+ searchTerm +'%']);
+    `, [IdDispositivo, '%' + searchTerm + '%', '%' + searchTerm + '%', '%' + searchTerm + '%']);
 
     return result; // Retorna el resultado de la consulta
   } catch (error) {
@@ -286,7 +330,7 @@ async function consulta_Catalogos_Por_Dispositivo_Busqueda(tabla, IdDispositivo,
 }
 //PERMITE REALIZAR EL MUESTREO DE TODAS LAS AREAS EXISTENTES DONDE COINCIDA EL TIPO DE UNIDAD
 async function consulta_Todos_Catalogos_Por_Dispositivo(tabla, IdDispositivo) {
-  
+
   let connection;
   try {
     connection = await getConnection(); // Obtener conexión del pool
@@ -316,17 +360,156 @@ async function consulta_Todos_Catalogos_Por_Dispositivo(tabla, IdDispositivo) {
   }
 }
 
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/*FACTURAS*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/** CONSULTAS */
+
+async function consulta_Todas_Facturas(tabla) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      SELECT *  FROM ${tabla} ORDER BY IdFactura DESC `);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+async function consulta_Factura_Busqueda(tabla, searchTerm) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      SELECT *  FROM ${tabla} 
+          WHERE IdFactura = ? OR NombreProveedor LIKE ? OR LugarCompra LIKE ?  
+          ORDER BY IdFactura DESC 
+    `, [searchTerm, '%' + searchTerm + '%', '%' + searchTerm + '%']);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+//INSERT
+async function agregarFactura(tabla, Data) {
+  let connection;
+
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`INSERT INTO ${tabla} (NumeroFactura, NombreProveedor, LugarCompra, FechaFactura,Observacion) VALUES (?, ?, ?, ?, ?)`,
+      [Data.numeroFactura, Data.nombreProveedor, Data.lugarCompra, Data.fechaFactura, Data.observacion]);
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/*TECNICOS*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/** CONSULTAS */
+
+async function Verificar_Login(tabla, username) {
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`SELECT nombre,PasswordWeb,cargo,usuario,Idusuario,IsAdmin FROM ${tabla} WHERE Username = ? AND status_tecnico=1
+    `, [username]);
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+// Función corregida
+async function Verificar_Existencia_usuario_tecnico(tabla, username) {
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    // Cambiar a SELECT completo para recuperar los datos (incluyendo el hash de la contraseña)
+    const [result] = await connection.query(
+      `SELECT nombre,PasswordWeb,cargo,usuario,id_tecnico,IsAdmin FROM ${tabla} WHERE usuario = ?  ` ,  
+      [username]
+    );
+    // Si hay resultados, devolver el primer registro (objeto con los datos)
+    if (result.length > 0) {
+      return result[0];  // Devuelve el objeto completo del usuario (ej: { id_tecnico: 1, usuario: 'ejemplo', password: 'hash...' })
+    } else {
+      return null;  // Usuario no existe
+    }
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+
+
+//INSERT
+async function agregarTecnicos(tabla, Data, hashedPassword, passwordCIP) {
+  let connection;
+
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`INSERT INTO ${tabla} (nombre, usuario, password, PasswordWeb,cargo,estatus_tecnico,IsAdmin) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [Data.nombre, Data.usuario, passwordCIP, hashedPassword, Data.cargo, Data.estatus_tecnico, Data.IsAdmin]);
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+
 
 module.exports = {
   //COMPONENTES
+  //CONSULTA
   consulta_NumSerie_CodigoTI,
   consulta_componente,
   Verificar_Existencia_componente,
   consulta_id_componente,
- 
+  //UPDATE
+  EditarComponenteFactura,
+
 
   //UNIDADES
- consulta_Por_Unidad,
+  consulta_Por_Unidad,
   //AREAS
   consulta_Area_Por_TipoUnidad,
   consulta_Todas_Areas_Por_TipoUnidad,
@@ -336,6 +519,19 @@ module.exports = {
   consulta_Por_Dispositivo_Busqueda,
 
   //CATALOGO COMPONENTES
-consulta_Catalogos_Por_Dispositivo_Busqueda,
-consulta_Todos_Catalogos_Por_Dispositivo,
+  consulta_Catalogos_Por_Dispositivo_Busqueda,
+  consulta_Todos_Catalogos_Por_Dispositivo,
+
+  //FACTURAS
+  consulta_Todas_Facturas,
+  consulta_Factura_Busqueda,
+
+  //INSERT
+  agregarFactura,
+
+  //LOGIN TABLA TECNICO
+  Verificar_Existencia_usuario_tecnico,
+  Verificar_Login,
+  agregarTecnicos,
+
 };

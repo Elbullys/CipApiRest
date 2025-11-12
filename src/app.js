@@ -4,11 +4,16 @@ const config = require("./config");
 const app = express();
 const error = require("./red/errors");
 const cors = require('cors');
-const componentes = require('./modulos/componentes/rutas');
-const unidades = require('./modulos/unidades/rutas');
-const areas = require('./modulos/Areas/rutas');
-const dispositivos = require('./modulos/Dispositivos/rutas');
-const catalogos_componentes = require('./modulos/Catalogos/rutas');
+const componentes = require('./modulos/Componentes/rutasComponentes');
+const unidades = require('./modulos/unidades/rutasUnidades');
+const areas = require('./modulos/Areas/rutasAreas');
+const dispositivos = require('./modulos/Dispositivos/rutasDispositivos');
+const catalogos_componentes = require('./modulos/Catalogos/rutasCatalogosComponentes');
+const facturas = require('./modulos/Facturas/rutasFacturas');
+const tecnicos = require('./modulos/Tecnicos/rutasTecnicos');
+const logintecnico = require('./modulos/Autenticacion/rutasLoginTecnicos');
+const cookieParser = require('cookie-parser');
+
 
 // Configuración de CORS
 const allowedOrigins = [
@@ -25,7 +30,9 @@ const corsOptions = {
       callback(new Error('No permitido por CORS'));
     }
   },
-  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept"]
+  credentials: true,
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept","Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 };
 
 // Usar el middleware CORS con las opciones configuradas
@@ -35,6 +42,8 @@ app.use(cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // Esto habilita req.cookies
+
 
 // CONFIGURACION 
 app.set('port', config.app.port);
@@ -45,65 +54,10 @@ app.use('/api/unidades', unidades);
 app.use('/api/areas', areas);
 app.use('/api/dispositivos', dispositivos);
 app.use('/api/CatalogosComponentes', catalogos_componentes);
+app.use('/api/facturas', facturas);
+app.use('/api/tecnicos', tecnicos);
+app.use('/api/logintecnicos', logintecnico);
 
 app.use(error);
 
 module.exports = app;
-
-//const mysql= require("mysql2");
-//require('dotenv').config()
-//var cors = require('cors');
-// app.use(express.json());
-//app.use(cors());
-//require('dotenv').config()
-//CONFIGURAR CABECERAS Y CORDS
-/*app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
-
-//CONEXION A BASE DE DATOS
-
-const connection = mysql.createConnection({
-  host     : process.env.HOST,
-  database : process.env.DBNAME,
-  user     : process.env.USER,
-  password : process.env.PASSWORD
-});
-
-connection.connect((err)=>{
-  if(err)
-  {
-    throw err;
-    //console.log(err.message);
-  }
-  console.log("conexion satisfactoria bd");
-});
-
-//APIS DE LA APP
-app.get("/", (req, res) => {
-    res.send("Hola Mundo");
-  });
-
-//MOSTRAR TODOS LOS COMPONENTES
-  app.get('/api/componentes', (req, res) => {
-  connection.query('SELECT U.id_unidad,R.nombre_responsable,U.nombre_unidad,D.tipo_equipo,M.marca,M.modelo,C.numero_serie,C.operacion,C.codigo_TI,C.observaciones,C.status_componente,A.area,C.status_inventario FROM componentes C INNER JOIN unidad U ON U.id_unidad=C.FK_id_unidad INNER JOIN RESPONSABLE R ON R.id_responsable=C.FK_id_responsable INNER JOIN CATALOGO_COMPONENTES CC ON CC.id_catalogo_componente=C.FK_id_catalogo_componentes INNER JOIN MARCA M ON M.id_marca=CC.FK_id_marca_cata INNER JOIN dispositivos D ON D.id_dispositivo=C.FK_id_dispositivo INNER JOIN AREA A ON A.id_area=R.FK_id_area', (err, rows) => {
-    if (err) {
-      console.log(err);
-      
-    } else {
-      res.send(rows);
-    }
-  });
-
-});
-
-
-
-const port =process.env.PORT || 7000;
-//require('dotenv').config()
-
-app.listen(port, () => {
-    console.log('Servidor a su servicio en el puerto', port);
-  })*/

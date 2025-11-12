@@ -3,16 +3,16 @@ const respuesta = require("../../red/respuestas"); // Importamos el archivo de r
 
 const router = express.Router();
 
-const controlador = require("./controlador"); // Importamos el controlador
+const controlador = require("./controladorAreas"); // Importamos el controlador
 
 // Ruta para obtener todos los items
-router.get("/ConsultaCatalogosPorDispositivoBusqueda", async function (req, res,next) {
+router.get("/ConsultaAreaPorTipoUnidad", async function (req, res,next) {
   
-   const IdDispositivo = req.query.IdDispositivo; // Obtenemos tipo unidad desde la consulta
+   const TipoUnidad = req.query.TipoUnidad; // Obtenemos tipo unidad desde la consulta
   const searchTerm = req.query.searchTerm; // Obtenemos el area a buscar desde la consulta
   try {
   
-    const items = await controlador.ctl_consulta_Catalogos_Por_Dispositivo_Busqueda(IdDispositivo,searchTerm);
+    const items = await controlador.ctl_consulta_Area_Por_TipoUnidad(TipoUnidad,searchTerm);
     respuesta.success(req, res, items, 200);
     // Llamamos al método todos del controlador
   } catch (err) {
@@ -21,12 +21,12 @@ router.get("/ConsultaCatalogosPorDispositivoBusqueda", async function (req, res,
 });
 
 // Ruta para obtener todos los items
-router.get("/ConsultaTodosCatalogoPorDispositivo", async function (req, res,next) {
+router.get("/ConsultaTodasAreasPorTipoUnidad", async function (req, res,next) {
   
-   const IdDispositivo = req.query.IdDispositivo; // Obtenemos id unidad desde la consulta
+   const TipoUnidad = req.query.TipoUnidad; // Obtenemos id unidad desde la consulta
 
   try {
-    const items = await controlador.ctl_consulta_Todos_Catalogos_Por_Dispositivo(IdDispositivo);
+    const items = await controlador.ctl_consulta_Todas_Areas_Por_TipoUnidad(TipoUnidad);
     respuesta.success(req, res, items, 200);
     // Llamamos al método todos del controlador
   } catch (err) {

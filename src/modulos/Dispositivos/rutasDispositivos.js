@@ -3,7 +3,7 @@ const respuesta = require("../../red/respuestas"); // Importamos el archivo de r
 
 const router = express.Router();
 
-const controlador = require("./controlador"); // Importamos el controlador
+const controlador = require("./controladorDispositivos"); // Importamos el controlador
 
 // Ruta para obtener todos los items
 router.get("/ConsultaTodosDispositivos", async function (req, res,next) {
