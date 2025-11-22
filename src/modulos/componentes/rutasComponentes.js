@@ -23,7 +23,7 @@ router.post("/VerificarExistenciaComponente", async function (req, res,next) {
   const databusqueda =req.query.dataBusqueda; // Obtenemos el código TI desde la consulta
   try {
     const items = await controlador.ctl_verificar_id_componente_QR_Num_Serie(databusqueda);
-console.log("items",items);
+
     respuesta.success(req, res, items, 200);
 
   } catch (err) {
@@ -56,11 +56,17 @@ router.get("/ConsultarCodigoTINumSerie/:databusqueda", async function (req, res,
   }
 });
 
-//RUTA PARA CONSULTAR POR ID COMPONENTE
+
+//RUTA PARA CONSULTAR POR ID COMPONENTE 
 router.get("/ConsultarIdComponente/:idcomponente", async function (req, res,next) {
   try {
     const id_componente =req.params.idcomponente; // Obtenemos el código TI desde la consulta
-    const items = await controlador.ctl_consulta_Id_Componente(id_componente);
+    const items = await controlador.ctl_consulta_Id_Componente(id_componente); 
+if(items)
+  {
+    req.session.componenteMovAnterior = items;
+    
+  }    
     respuesta.success(req, res, items, 200);
     // Llamamos al método todos del controlador
   } catch (err) {
@@ -73,9 +79,8 @@ router.get("/ConsultarIdComponente/:idcomponente", async function (req, res,next
 /****************************************************************************************************** */
 router.put("/EditarComponenteFactura/:idComponente", async function (req, res, next) {
   const idComponente = parseInt(req.params.idComponente, 10);
-  console.log("req.body completo:", req.body);
   const data = req.body;
-  console.log("data recibida en ruta:", data);
+ 
   if (isNaN(idComponente)) {
     return res.status(400).json({ error: true, message: "ID inválido" });
   }
@@ -85,5 +90,33 @@ router.put("/EditarComponenteFactura/:idComponente", async function (req, res, n
   } catch (err) {
     next(err);
   }
-});
+}); 
+
+  router.put("/EditarComponentePorID/:idComponente", async function (req, res, next) {
+    const idComponente = parseInt(req.params.idComponente, 10);
+    
+    // Validación del ID: Asegúrate de que sea un entero positivo
+    if (isNaN(idComponente) || idComponente <= 0 || !Number.isInteger(idComponente)) {
+      return res.status(400).json({ error: true, message: "ID de componente inválido" });
+    }
+    
+    const {data,data_componentes_anteriores } = req.body;
+  
+
+    try {
+      // Validar que existan
+  if (!data || !data_componentes_anteriores) {
+    return res.status(400).json({icon:"warning", error: true, message: "Datos incompletos " });
+  }
+      
+      const result = await controlador.ctl_Editar_ComponentePorID(idComponente, data,data_componentes_anteriores);
+
+      respuesta.success(req, res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+
+//ctl_Editar_ComponentePorID
 module.exports = router;

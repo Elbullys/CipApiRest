@@ -20,7 +20,7 @@ router.post("/loginresponsable", async function (req, res, next) {
     //const  Password=usuarioData.Passwordsave;
     
 
-      const items = await controlador.ctl_login_tecnico(username, Password);
+      const items = await controlador.ctl_login_tecnico(username, Password, req.session);
       if (!items || !items.usuario) {
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }

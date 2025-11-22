@@ -1,6 +1,7 @@
 const { getConnection } = require("./db");
 const config = require("../config");
 
+//COMPONENTES
 async function consulta_componente(tabla) {
   let connection;
   try {
@@ -99,14 +100,15 @@ async function consulta_id_componente(tabla, id_componente) {
     connection = await getConnection(); // Obtener conexión del pool
 
     const [result] = await connection.query(`
-      SELECT U.id_unidad,U.tipo_unidad, R.nombre_responsable, U.nombre_unidad, A.area, C.operacion,
-             D.id_dispositivo,D.tipo_equipo,CC.id_catalogo_componente, M.marca, M.modelo, C.numero_serie, C.codigo_TI, C.observaciones,
+      SELECT U.id_unidad,U.abreviatura_estado,U.tipo_unidad,R.id_responsable, R.nombre_responsable,R.cargo,A.Area, U.nombre_unidad,U.Estado,C.estado_equipo,C.FK_id_area, A.area, C.operacion,
+             D.id_dispositivo,D.tipo_equipo,D.abreviatura_tipo,CC.id_catalogo_componente, M.marca, M.modelo, C.numero_serie,C.numero_consecutivo, C.codigo_TI, C.observaciones,
              C.status_componente, C.status_inventario, CT.num_contrato_actual, T.nombre,
              C.FechaRegistro, C.EsClienteServidor, C.FechaCompra,CF.IdFactura, CF.NumeroFactura,
              CF.NombreProveedor, CF.LugarCompra, CF.FechaFactura,CF.Observacion,C.id_componente,CC.descripcion_modelo
       FROM ${tabla} C
       INNER JOIN unidad U ON U.id_unidad = C.FK_id_unidad
       INNER JOIN responsable R ON R.id_responsable = C.FK_id_responsable
+      INNER JOIN area AR ON AR.id_area = R.FK_id_area
       INNER JOIN catalogo_componentes CC ON CC.id_catalogo_componente = C.FK_id_catalogo_componentes
       INNER JOIN marca M ON M.id_marca = CC.FK_id_marca_cata
       INNER JOIN dispositivos D ON D.id_dispositivo = C.FK_id_dispositivo
@@ -130,14 +132,39 @@ async function consulta_id_componente(tabla, id_componente) {
   }
 }
 
+async function consulta_Max_consecutivo_PorDispositivo_y_Operacion(tabla, FK_id_dispositivo, operacion) {
+
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [rows] = await connection.query(`
+      select Max(numero_consecutivo) AS max_consecutivo FROM ${tabla} where FK_id_dispositivo = ? AND operacion= ?
+    `, [FK_id_dispositivo, operacion]);
+
+    if (rows.length > 0 && rows[0].max_consecutivo !== null) {
+      return rows[0].max_consecutivo;  // Retorna solo el número (ej. 451)
+    } else {
+      return null;  // Si no hay resultados o es null
+    }
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
 //UPDTATE
 async function EditarComponenteFactura(tabla, idComponente, data) {
   let connection;
 
   try {
     const { idFactura } = data;
-    console.log("data recibida en db:", data);
-    console.log("id_factura recibida en db:", idFactura);
+
     connection = await getConnection(); // Obtener conexión del pool
     const [result] = await connection.query(`
       UPDATE ${tabla} 
@@ -156,8 +183,46 @@ async function EditarComponenteFactura(tabla, idComponente, data) {
     }
   }
 }
+
+async function EditarComponentePorID(tabla, idComponente, data, codigo_TI) {
+  let connection;
+ console.log("data en bd",data);
+  try {
+    const { FK_Factura, operacion, numero_serie, estado_equipo, numero_consecutivo, observaciones, status_componente, status_inventario,
+      FK_id_responsable, FK_id_unidad, FK_id_dispositivo, FK_id_catalogo_componentes,
+      FK_id_area, FK_IdTecnico, EsClienteServidor, FechaCompra,
+    } = data;
+
+   
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      UPDATE ${tabla} 
+      SET FK_Factura= ?,operacion= ?,numero_serie = ?, estado_equipo = ?,
+      numero_consecutivo = ?,codigo_TI = ?,observaciones = ?,
+      status_componente = ?,status_inventario = ?,FK_id_responsable = ?, FK_id_unidad = ?,
+      FK_id_dispositivo = ?, FK_id_catalogo_componentes = ?,FK_id_area = ?, 
+      FK_IdTecnico = ? , EsClienteServidor = ?, FechaCompra = ? 
+      WHERE id_componente = ?
+    `, [FK_Factura, operacion, numero_serie, estado_equipo, numero_consecutivo,
+      codigo_TI, observaciones, status_componente, status_inventario,
+      FK_id_responsable, FK_id_unidad, FK_id_dispositivo, FK_id_catalogo_componentes,
+      FK_id_area, FK_IdTecnico, EsClienteServidor, FechaCompra, idComponente]);
+    return {result,codigo_TI}; // Retorna el resultado de la consulta
+  }
+
+  catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-/*UNIDADES*/
+//*UNIDADES*/
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 /** CONSULTAS */
 
@@ -190,7 +255,7 @@ async function consulta_Por_Unidad(tabla, databusqueda) {
 }
 
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-/*AREAS*/
+//*AREAS*/
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 /** CONSULTAS */
 
@@ -240,8 +305,59 @@ async function consulta_Todas_Areas_Por_TipoUnidad(tabla, TipoUnidad) {
     }
   }
 }
+
+
+
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-/*DISPOSITIVOS*/
+//*RESPONSABLES*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/** CONSULTAS */
+async function consulta_ResponsablePorUnidad(tabla, searchTerm, idUnidad) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      SELECT R.id_responsable ,R.nombre_responsable,R.cargo,U.nombre_unidad ,A.Area
+      FROM ${tabla} R JOIN unidad U ON U.id_unidad=R.FK_idunidad JOIN area AS A ON A.id_area=R.FK_id_area 
+      WHERE  R.FK_idunidad = ? AND R.nombre_responsable LIKE ?  AND R.estado_responsable = 'ACTIVO' 
+    `, [ idUnidad,'%' + searchTerm + '%']);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+//PERMITE REALIZAR EL MUESTREO DE TODAS LOS RESPONSABLES EXISTENTES DONDE COINCIDA EL ID DE UNIDAD
+async function ConsultaTodosResponsablePorIDUnidad(tabla, idUnidad) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      SELECT R.id_responsable ,R.nombre_responsable,R.cargo,A.Area 
+      FROM ${tabla} R JOIN unidad U ON U.id_unidad=R.FK_idunidad  JOIN area AS A ON A.id_area=R.FK_id_area 
+      WHERE R.FK_idunidad = ? AND R.estado_responsable = 'ACTIVO'
+    `, [idUnidad]);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//*DISPOSITIVOS*/
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 /** CONSULTAS */
 
@@ -292,7 +408,7 @@ async function consulta_Por_Dispositivo_Busqueda(tabla, searchTerm) {
   }
 }
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-/*CATALOGO COMPONENTES*/
+//*CATALOGO COMPONENTES*/
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 /** CONSULTAS */
 
@@ -361,7 +477,7 @@ async function consulta_Todos_Catalogos_Por_Dispositivo(tabla, IdDispositivo) {
 }
 
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-/*FACTURAS*/
+//*FACTURAS*/
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 /** CONSULTAS */
 
@@ -427,7 +543,7 @@ async function agregarFactura(tabla, Data) {
 }
 
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-/*TECNICOS*/
+//*TECNICOS*/
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 /** CONSULTAS */
 
@@ -435,7 +551,7 @@ async function Verificar_Login(tabla, username) {
   let connection;
   try {
     connection = await getConnection(); // Obtener conexión del pool
-    const [result] = await connection.query(`SELECT nombre,PasswordWeb,cargo,usuario,Idusuario,IsAdmin FROM ${tabla} WHERE Username = ? AND status_tecnico=1
+    const [result] = await connection.query(`SELECT nombre,PasswordWeb,cargo,usuario,id_tecnico,IsAdmin FROM ${tabla} WHERE Username = ? AND status_tecnico=1
     `, [username]);
     return result; // Retorna el resultado de la consulta
   } catch (error) {
@@ -455,7 +571,7 @@ async function Verificar_Existencia_usuario_tecnico(tabla, username) {
     connection = await getConnection(); // Obtener conexión del pool
     // Cambiar a SELECT completo para recuperar los datos (incluyendo el hash de la contraseña)
     const [result] = await connection.query(
-      `SELECT nombre,PasswordWeb,cargo,usuario,id_tecnico,IsAdmin FROM ${tabla} WHERE usuario = ?  ` ,  
+      `SELECT nombre,PasswordWeb,cargo,usuario,id_tecnico,IsAdmin FROM ${tabla} WHERE usuario = ?  `,
       [username]
     );
     // Si hay resultados, devolver el primer registro (objeto con los datos)
@@ -495,6 +611,37 @@ async function agregarTecnicos(tabla, Data, hashedPassword, passwordCIP) {
   }
 }
 
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//*MOVIMIENTO DE COMPONENTES*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//INSERT
+async function agregarMovimientoComponente(tabla, componenteMovAnterior, componenteMovFinal, codigoTI,idComponente) {
+  let connection;
+const idtecnico=componenteMovFinal.FK_IdTecnico;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`INSERT INTO ${tabla} (
+        Operacion_origen, StatusComponente_origen, Observaciones_origen, NumeroSerie_origen, FK_IdUnidad_origen, FK_IdArea_origen, FK_IdCatalogoComponente_origen,
+        Operacion_destino, StatusComponente_destino, Observaciones_destino, NumeroSerie_destino, FK_IdUnidad_destino, FK_IdArea_destino, FK_IdCatalogoComponente_destino,
+        FK_Componente, numero_contrato, CodigoTI, StatusInventario, FechaCambio, FK_TECNICO
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
+      [
+        componenteMovAnterior.operacion, componenteMovAnterior.status_componente, componenteMovAnterior.observaciones, componenteMovAnterior.numero_serie, componenteMovAnterior.FK_id_unidad, componenteMovAnterior.FK_id_area, componenteMovAnterior.FK_id_catalogo_componentes,
+        componenteMovFinal.operacion, componenteMovFinal.status_componente, componenteMovFinal.observaciones, componenteMovFinal.numero_serie, componenteMovFinal.FK_id_unidad, componenteMovFinal.FK_id_area, componenteMovFinal.FK_id_catalogo_componentes,
+        idComponente, componenteMovFinal.numero_contrato_actual, codigoTI, componenteMovFinal.status_inventario, idtecnico
+      ]);
+    return result; // Retorna el resultado de la consulta
+    
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
 
 
 module.exports = {
@@ -504,8 +651,11 @@ module.exports = {
   consulta_componente,
   Verificar_Existencia_componente,
   consulta_id_componente,
+  consulta_Max_consecutivo_PorDispositivo_y_Operacion,
+
   //UPDATE
   EditarComponenteFactura,
+  EditarComponentePorID,
 
 
   //UNIDADES
@@ -514,6 +664,9 @@ module.exports = {
   consulta_Area_Por_TipoUnidad,
   consulta_Todas_Areas_Por_TipoUnidad,
 
+  //*RESPONSABLES
+  consulta_ResponsablePorUnidad,
+  ConsultaTodosResponsablePorIDUnidad,
   //DISPOSITIVOS
   consulta_TODOS_dispositivos,
   consulta_Por_Dispositivo_Busqueda,
@@ -533,5 +686,10 @@ module.exports = {
   Verificar_Existencia_usuario_tecnico,
   Verificar_Login,
   agregarTecnicos,
+
+
+  //MOVIMIENTO DE COMPONENTES
+  //INSERT
+  agregarMovimientoComponente,
 
 };

@@ -13,8 +13,8 @@ async function ctl_login_tecnico(Data) {
     const validarusername = Utils.Validar_datos.username(username);
     const validarpassword = Utils.Validar_datos.password(PasswordWeb);
 
-   
-    if (validarusername.error || validarpassword.error ) {
+
+    if (validarusername.error || validarpassword.error) {
         // Array de todas las validaciones para iterar
         const validations = [validarusername, validarpassword];
 
@@ -27,14 +27,14 @@ async function ctl_login_tecnico(Data) {
             message: failedValidation.message || "Campo no válido",
         };
     } else {
-        
+
         try {
             const usuarioExistente = await db.Verificar_Existencia_usuario_tecnico(TABLA, username);
 
             if (!usuarioExistente) {
                 return { icon: "warning", error: true, message: "Usuario No Registrado" };
             } else {
-                
+
                 const isValidPassword = bcrypt.compareSync(PasswordWeb, usuarioExistente.PasswordWeb);  // Asumiendo que la columna se llama 'password'
                 console.log("isValidPassword..", isValidPassword);
 
@@ -45,15 +45,14 @@ async function ctl_login_tecnico(Data) {
                         message: "Contraseña Incorrecta",
                     };
                 } else {
-
-                    // Devuelve los datos públicos (sin la contraseña)
+                  
                     return {
                         icon: "success",
                         error: false,
                         message: "¡Bienvenido Tecnico!",
-                        usuario: usuarioExistente.usuario,  
-                        id_tecnico: usuarioExistente.id_tecnico,  
-                         IsAdmin: usuarioExistente.IsAdmin,
+                        usuario: usuarioExistente.usuario,
+                        id_tecnico: usuarioExistente.id_tecnico,
+                        IsAdmin: usuarioExistente.IsAdmin,
                     };
                 }
             }

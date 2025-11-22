@@ -46,9 +46,11 @@ class Validar_datos {
                 message: "La contraseña debe tener al menos 3 caracteres.",
             };
         }
+        
         return { icon: "check", error: false, message: "Datos válidos" };
     }
 
+    
     static validar_Campos_String(ValidarDato, campo) {
 
         if (!ValidarDato || ValidarDato.toString().trim() === "" || ValidarDato.toString() === "unfined") {

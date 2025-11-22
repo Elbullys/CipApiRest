@@ -4,7 +4,7 @@ const config = require("./config");
 const app = express();
 const error = require("./red/errors");
 const cors = require('cors');
-const componentes = require('./modulos/Componentes/rutasComponentes');
+const componentes = require('./modulos/componentes/rutasComponentes');
 const unidades = require('./modulos/unidades/rutasUnidades');
 const areas = require('./modulos/Areas/rutasAreas');
 const dispositivos = require('./modulos/Dispositivos/rutasDispositivos');
@@ -12,8 +12,20 @@ const catalogos_componentes = require('./modulos/Catalogos/rutasCatalogosCompone
 const facturas = require('./modulos/Facturas/rutasFacturas');
 const tecnicos = require('./modulos/Tecnicos/rutasTecnicos');
 const logintecnico = require('./modulos/Autenticacion/rutasLoginTecnicos');
+const MovComponentes = require('./modulos/MovComponente/rutasMovComponentes');
+const responsables = require('./modulos/Responsables/rutasResponsables');
 const cookieParser = require('cookie-parser');
-
+const session = require('express-session');
+// Configuración básica de la sesión
+app.use(session({
+    secret: process.env.SESSION_SECRET||'tu_secreto_muy_seguro_aqui', 
+    resave: false, // Evita guardar la sesión si no ha sido modificada
+    saveUninitialized: false, // Evita crear sesiones para usuarios no autenticados o no modificados
+    cookie: { 
+        secure: false, // Cambia a true si usas HTTPS en producción
+        maxAge: 1000 * 60 * 60 * 24 // Ejemplo: 1 día de duración
+    }
+}));
 
 // Configuración de CORS
 const allowedOrigins = [
@@ -57,6 +69,8 @@ app.use('/api/CatalogosComponentes', catalogos_componentes);
 app.use('/api/facturas', facturas);
 app.use('/api/tecnicos', tecnicos);
 app.use('/api/logintecnicos', logintecnico);
+app.use('/api/movComponentes', MovComponentes);
+app.use('/api/responsables', responsables);
 
 app.use(error);
 
