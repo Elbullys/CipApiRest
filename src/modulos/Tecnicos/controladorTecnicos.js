@@ -38,7 +38,7 @@ async function ctl_agregar_tecnico(tecnicoData) {
        // Usuario no existe, proceder a registrar
        const saltRounds = parseInt(config.salt_rounds);
        const passwordCIP = Utils.ConversionPasswords.ConversionContrasenaCIPDesktopEncriptar(tecnicoData.password);
-       const encriptarpassword = tecnicoData.PasswordWeb;  // Nota: Esto parece ser la contraseña en texto plano; asegúrate de que sea correcta
+       const encriptarpassword = tecnicoData.PasswordWeb;  
        const hashedPassword = await bcrypt.hash(encriptarpassword, saltRounds);
        const nuevotecnico = await db.agregarTecnicos(TABLA, tecnicoData, hashedPassword, passwordCIP);
        return { error: false, body: nuevotecnico };

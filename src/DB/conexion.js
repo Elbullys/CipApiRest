@@ -667,22 +667,22 @@ module.exports = {
   //*RESPONSABLES
   consulta_ResponsablePorUnidad,
   ConsultaTodosResponsablePorIDUnidad,
-  //DISPOSITIVOS
+  //*DISPOSITIVOS
   consulta_TODOS_dispositivos,
   consulta_Por_Dispositivo_Busqueda,
 
-  //CATALOGO COMPONENTES
+  //*CATALOGO COMPONENTES
   consulta_Catalogos_Por_Dispositivo_Busqueda,
   consulta_Todos_Catalogos_Por_Dispositivo,
 
-  //FACTURAS
+  //*FACTURAS
   consulta_Todas_Facturas,
   consulta_Factura_Busqueda,
 
   //INSERT
   agregarFactura,
 
-  //LOGIN TABLA TECNICO
+  //*LOGIN TABLA TECNICO
   Verificar_Existencia_usuario_tecnico,
   Verificar_Login,
   agregarTecnicos,
