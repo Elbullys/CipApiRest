@@ -13,9 +13,11 @@ const loadUserData = (req, res, next) => {
 
     // 2. Intentar cargar el usuario desde la cookie JWT
     const token = req.cookies.access_token;
+    console.log("token",token);
     if (token) {
         try {
            
+            console.log("veirficiando token, si existe",token);
             // Decodificar el token usando la clave secreta
             const decodedPayload = jwt.verify(token, config.secret_jwt_key);
             
@@ -51,7 +53,7 @@ const checkAuth = (req, res, next) => {
 // Middleware 3: Opcional, pero útil para cargar los datos en variables directas de req
 function requireAuth(req, res, next) {
     const data = req.userSessionData;
-
+console.log("data",data);
     if (data && data.usuario) {
         req.username = data.usuario;
         req.id_tecnico = data.id_tecnico;
