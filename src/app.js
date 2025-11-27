@@ -3,6 +3,7 @@ const morgan = require("morgan");
 const config = require("./config");
 const app = express();
 const error = require("./red/errors");
+const { loadUserData,checkAuth } = require('./middleware/authMiddleware');
 const cors = require('cors');
 const componentes = require('./modulos/componentes/rutasComponentes');
 const unidades = require('./modulos/unidades/rutasUnidades');
@@ -16,6 +17,7 @@ const MovComponentes = require('./modulos/MovComponente/rutasMovComponentes');
 const responsables = require('./modulos/Responsables/rutasResponsables');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+
 // Configuración básica de la sesión
 app.use(session({
     secret: process.env.SESSION_SECRET||'tu_secreto_muy_seguro_aqui', 
@@ -56,15 +58,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Esto habilita req.cookies
 
-
+app.use(loadUserData);  // Aplica globalmente
 // CONFIGURACION 
 app.set('port', config.app.port);
 
 // RUTAS
-app.use('/api/componentes', componentes);
-app.use('/api/unidades', unidades);
-app.use('/api/areas', areas);
-app.use('/api/dispositivos', dispositivos);
+app.use('/api/componentes', checkAuth,componentes);
+app.use('/api/unidades', checkAuth,unidades);
+app.use('/api/areas',checkAuth, areas);
+app.use('/api/dispositivos', checkAuth,dispositivos);
 app.use('/api/CatalogosComponentes', catalogos_componentes);
 app.use('/api/facturas', facturas);
 app.use('/api/tecnicos', tecnicos);

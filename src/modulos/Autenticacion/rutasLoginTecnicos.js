@@ -4,6 +4,7 @@ const router = express.Router();
 const controlador = require("./controladorLoginTecnicos"); // Importamos el controlador
 const jwt = require("jsonwebtoken");
 const config = require("../../config");
+const { requireAuth } = require('../../middleware/authMiddleware');
 
 
 
@@ -11,11 +12,12 @@ const config = require("../../config");
 
 
 //LOGIN
-router.post("/logintecnico", async function (req, res, next) {
+router.post("/logintecnico" ,async function (req, res, next) {
+
 
   try {
     const Data = req.body;
-                          
+
 
     //const username=usuarioData.Username;
     //const  Password=usuarioData.Passwordsave;
@@ -33,16 +35,17 @@ router.post("/logintecnico", async function (req, res, next) {
       id_tecnico: items.id_tecnico,
       IsAdmin: items.IsAdmin
     };
-    
-   
+
+
     //CREACION del token JWT AUTETICACION 
     const token = jwt.sign(payload, config.secret_jwt_key, { expiresIn: '1h' })
     res.
       cookie('access_token', token, {
-        httpOnly: true, // El token no será accesible desde JavaScript del lado del cliente
+        httpOnly: false, // El token no será accesible desde JavaScript del lado del cliente
         secure: process.env.NODE_ENV === 'production',  // true en producción (HTTPS)
-        sameSite: "Strict",//Strict // Asegura que la cookie solo se envíe en solicitudes del mismo sitio
-        maxAge: 1000 * 60 * 60, // 1 hora en milisegundos // Ajusta el dominio según sea necesario
+        sameSite: "Lax",//Strict // Asegura que la cookie solo se envíe en solicitudes del mismo sitio
+        maxAge: 1000 * 60 * 60, // 1 hora en milisegundos
+        domain:'localhost'// config.domain ||, // Ajusta el dominio según sea necesario
       })
 
     res.send({
@@ -50,10 +53,11 @@ router.post("/logintecnico", async function (req, res, next) {
       data: {
         error: false,
         message: items.message || 'Login exitoso',
-        username: items.usuario,
+        token: token
+        /*username: items.usuario,
         Idusuario: items.id_tecnico, 
-        IsAdmin:items.IsAdmin
-      }
+        IsAdmin:items.IsAdmin*/
+      },
     });
 
 
@@ -65,19 +69,13 @@ router.post("/logintecnico", async function (req, res, next) {
 
 });
 
-router.get('/protected', (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) {
-    console.log("no token");
-    return res.status(401).json({ error: 'Access not authorized' });
-  }
-  try {
-    const data = jwt.verify(token, config.secret_jwt_key);
-   
-    res.json({ message: 'Acceso concedido al recurso protegido.', data });//{ isAdmin, username , id_usuario}
-  } catch (err) {
-    res.status(400).json({ error: 'Token inválido.' });
-  }
+router.get('/protected',requireAuth ,(req, res) => {
+
+  res.json({
+    success: true,
+    message: 'Acceso concedido al recurso protegido.',
+    data: req.userSessionData  // Devuelve los datos del usuario
+  });
 });
 
 

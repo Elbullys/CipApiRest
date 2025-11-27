@@ -10,8 +10,9 @@ const config = require("../../config");
 
 
 
+
 //LOGIN
-router.post("/loginresponsable", async function (req, res, next) {
+router.post("/loginresponsable",requireAuth, async function (req, res, next) {
 
   try {
     const { username, Password } = req.body;  // Valida que vengan del body

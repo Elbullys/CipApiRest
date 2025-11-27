@@ -11,6 +11,6 @@ module.exports={
     },
         salt_rounds: process.env.SALT_ROUNDS || 20,
         secret_jwt_key:process.env.SECRET_JWT_KEY,
-        secure_cookie:process.env.SECURE_COOKIE === 'true', // Convertir a booleano
-
+        secure_cookie:process.env.SECURE_COOKIE === 'true',
+        domain:process.env.DOMAIN||'localhost'
 };

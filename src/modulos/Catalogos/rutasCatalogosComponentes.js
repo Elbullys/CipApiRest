@@ -4,9 +4,9 @@ const respuesta = require("../../red/respuestas"); // Importamos el archivo de r
 const router = express.Router();
 
 const controlador = require("./controladorCatalogosComponentes"); // Importamos el controlador
-
+const { requireAuth } = require('../../middleware/authMiddleware');
 // Ruta para obtener todos los items
-router.get("/ConsultaCatalogosPorDispositivoBusqueda", async function (req, res,next) {
+router.get("/ConsultaCatalogosPorDispositivoBusqueda",requireAuth, async function (req, res,next) {
   
    const IdDispositivo = req.query.IdDispositivo; // Obtenemos tipo unidad desde la consulta
   const searchTerm = req.query.searchTerm; // Obtenemos el area a buscar desde la consulta
@@ -21,7 +21,7 @@ router.get("/ConsultaCatalogosPorDispositivoBusqueda", async function (req, res,
 });
 
 // Ruta para obtener todos los items
-router.get("/ConsultaTodosCatalogoPorDispositivo", async function (req, res,next) {
+router.get("/ConsultaTodosCatalogoPorDispositivo", requireAuth,async function (req, res,next) {
   
    const IdDispositivo = req.query.IdDispositivo; // Obtenemos id unidad desde la consulta
 
