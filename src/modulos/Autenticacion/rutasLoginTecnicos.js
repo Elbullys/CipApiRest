@@ -12,7 +12,7 @@ const { requireAuth } = require('../../middleware/authMiddleware');
 
 
 //LOGIN
-router.post("/logintecnico" ,async function (req, res, next) {
+router.post("/logintecnico", async function (req, res, next) {
 
 
   try {
@@ -69,12 +69,12 @@ router.post("/logintecnico" ,async function (req, res, next) {
 
 });
 
-router.get('/protected',requireAuth ,(req, res) => {
-
+// RUTA PROTEGIDA (usa requireAuth para validar el token)
+router.get('/protected', requireAuth, (req, res) => {
   res.json({
     success: true,
     message: 'Acceso concedido al recurso protegido.',
-    data: req.userSessionData  // Devuelve los datos del usuario
+    data: req.userSessionData  // Aquí ya están los datos validados
   });
 });
 

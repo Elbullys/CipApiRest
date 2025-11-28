@@ -62,10 +62,10 @@ app.use(loadUserData);  // Aplica globalmente
 app.set('port', config.app.port);
 
 // RUTAS
-app.use('/api/componentes', checkAuth, componentes);
-app.use('/api/unidades', checkAuth, unidades);
-app.use('/api/areas', checkAuth, areas);
-app.use('/api/dispositivos', checkAuth, dispositivos);
+app.use('/api/componentes', requireAuth, componentes);
+app.use('/api/unidades', requireAuth, unidades);
+app.use('/api/areas', requireAuth, areas);
+app.use('/api/dispositivos', requireAuth, dispositivos);
 app.use('/api/CatalogosComponentes', catalogos_componentes);
 app.use('/api/facturas', facturas);
 app.use('/api/tecnicos', tecnicos);
