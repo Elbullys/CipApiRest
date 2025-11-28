@@ -30,7 +30,8 @@ const loadUserData = (req, res, next) => {
             };
             console.log("Datos decodificados:", req.userSessionData);
         } catch (err) {
-            console.error("Error al verificar JWT:", err.message);
+           console.error("Error al verificar JWT:", err.name, "-", err.message); 
+            req.userSessionData = null;
         }
     } else {
         console.log("No hay token en cookies ni headers");
