@@ -49,15 +49,13 @@ router.post("/logintecnico", async function (req, res, next) {
       })
 
     res.send({
-      success: true,
-      data: {
+    success: true,
+    data: {
         error: false,
         message: items.message || 'Login exitoso',
-        token: token
-        /*username: items.usuario,
-        Idusuario: items.id_tecnico, 
-        IsAdmin:items.IsAdmin*/
-      },
+        // Opcional: Ya no es necesario enviar el token en el cuerpo
+        // token: token 
+    },
     });
 
 

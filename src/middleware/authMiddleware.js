@@ -12,13 +12,13 @@ const loadUserData = (req, res, next) => {
     console.log("Headers Authorization recibidos:", req.headers.authorization); 
 
     // A. Intentar obtener el token de las cookies
-    let token = req.cookies.access_token; 
+   let token = req.cookies.access_token;  
 
-    // B. Si no hay cookie, intentar obtenerlo del header Authorization (Bearer token)
+    // B. Si no hay cookie, intentar obtenerlo del header Authorization (RESPALDO)
     if (!token) {
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
-            token = authHeader.substring(7);  // Extrae el token
+            token = authHeader.substring(7);  
         }
     }
 
