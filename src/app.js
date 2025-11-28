@@ -47,22 +47,20 @@ app.use(morgan('combined'));  // Cambiado: 'combined' en prod para logs más lim
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
-app.use('/api/logintecnicos', logintecnico);
-//app.use(loadUserData);  // Aplica globalmente
+app.use(loadUserData);  // Aplica globalmente
 
 // CONFIGURACION 
 app.set('port', config.app.port);
 
 // RUTAS
-app.use('/api/componentes',loadUserData, requireAuth, componentes);
-app.use('/api/unidades', loadUserData,requireAuth, unidades);
-app.use('/api/areas', loadUserData,requireAuth, areas);
-app.use('/api/dispositivos', loadUserData,requireAuth, dispositivos);
+app.use('/api/componentes', requireAuth, componentes);
+app.use('/api/unidades', requireAuth, unidades);
+app.use('/api/areas', requireAuth, areas);
+app.use('/api/dispositivos', requireAuth, dispositivos);
 app.use('/api/CatalogosComponentes', catalogos_componentes);
 app.use('/api/facturas', facturas);
 app.use('/api/tecnicos', tecnicos);
-
+app.use('/api/logintecnicos', logintecnico);
 app.use('/api/movComponentes', MovComponentes);
 app.use('/api/responsables', responsables);
 
