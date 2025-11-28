@@ -68,7 +68,7 @@ router.post("/logintecnico", async function (req, res, next) {
 });
 
 // RUTA PROTEGIDA (usa requireAuth para validar el token)
-router.get('/protected', requireAuth, (req, res) => {
+router.get('/protected',loadUserData, requireAuth, (req, res) => {
   res.json({
     success: true,
     message: 'Acceso concedido al recurso protegido.',
