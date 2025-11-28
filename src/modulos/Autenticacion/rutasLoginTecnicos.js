@@ -41,11 +41,11 @@ router.post("/logintecnico" ,async function (req, res, next) {
     const token = jwt.sign(payload, config.secret_jwt_key, { expiresIn: '1h' })
     res.
       cookie('access_token', token, {
-        httpOnly: false, // El token no será accesible desde JavaScript del lado del cliente
+        httpOnly: true, // El token no será accesible desde JavaScript del lado del cliente
         secure: process.env.NODE_ENV === 'production',  // true en producción (HTTPS)
         sameSite: "Lax",//Strict // Asegura que la cookie solo se envíe en solicitudes del mismo sitio
         maxAge: 1000 * 60 * 60, // 1 hora en milisegundos
-        domain:'https://apirestcip.onrender.com'// config.domain ||, // Ajusta el dominio según sea necesario
+        domain:'apirestcip.onrender.com'// config.domain ||, // Ajusta el dominio según sea necesario
       })
 
     res.send({

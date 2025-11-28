@@ -6,7 +6,7 @@ const loadUserData = (req, res, next) => {
     
     // 1. Excluye rutas públicas (ej. el login)
     // Usamos includes para ser flexibles con la ruta completa.
-    if (req.path.includes('/LoginTecnico')) {
+   if (req.path.includes('/logintecnico') || req.path.includes('/LoginTecnico')) {
         
         return next();
     }
