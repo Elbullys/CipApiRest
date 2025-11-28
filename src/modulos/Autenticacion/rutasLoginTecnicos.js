@@ -4,7 +4,7 @@ const router = express.Router();
 const controlador = require("./controladorLoginTecnicos"); // Importamos el controlador
 const jwt = require("jsonwebtoken");
 const config = require("../../config");
-const { requireAuth } = require('../../middleware/authMiddleware');
+const {loadUserData,requireAuth } = require('../../middleware/authMiddleware');
 
 
 
