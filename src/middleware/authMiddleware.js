@@ -3,14 +3,22 @@ const config = require('../config');
 
 // Middleware 1: Carga los datos del usuario decodificando el JWT de la cookie
 const loadUserData = (req, res, next) => {
-    // Excluye rutas públicas
     if (req.path.includes('/logintecnico') || req.path.includes('/LoginTecnico')) {
         return next();
     }
 
-    console.log("Cookies recibidas:", req.cookies);  // Agrega esto: Verifica si access_token llega
-    const token = req.cookies.access_token;
-    console.log("Token recibido:", token ? "Presente" : "Ausente");  // Agrega esto
+    console.log("Cookies recibidas:", req.cookies);
+    let token = req.cookies.access_token;  // Primero intenta cookies (para desarrollo)
+
+    if (!token) {
+        // Si no hay cookie, intenta headers (para producción cross-origin)
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.substring(7);  // Extrae el token
+        }
+    }
+
+    console.log("Token recibido:", token ? "Presente" : "Ausente");
 
     if (token) {
         try {
@@ -20,16 +28,15 @@ const loadUserData = (req, res, next) => {
                 id_tecnico: decodedPayload.id_tecnico,
                 IsAdmin: decodedPayload.IsAdmin
             };
-            console.log("Datos decodificados:", req.userSessionData);  // Agrega esto
+            console.log("Datos decodificados:", req.userSessionData);
         } catch (err) {
             console.error("Error al verificar JWT:", err.message);
         }
     } else {
-        console.log("No hay token en cookies");  // Agrega esto
+        console.log("No hay token en cookies ni headers");
     }
     next();
 };
-
 // Middleware 2: Verifica que los datos del usuario se hayan cargado (Autorización)
 const checkAuth = (req, res, next) => {
     if (!req.userSessionData) {
