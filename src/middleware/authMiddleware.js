@@ -71,8 +71,9 @@ function requireAuth(req, res, next) {
         // No hay datos de sesión válidos
         return res.status(401).json({
             error: 'Sesión expirada o inválida',
-            message: 'Vuelve a loguearte'
+            message: 'Vuelve a loguearte por favor'
         });
+
     }
 }
 
