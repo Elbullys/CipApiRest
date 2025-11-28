@@ -38,7 +38,7 @@ router.post("/logintecnico", async function (req, res, next) {
 
 
     //CREACION del token JWT AUTETICACION 
-    const token = jwt.sign(payload, config.secret_jwt_key, { expiresIn: '1h' })
+    const token = jwt.sign(payload, process.env.SECRET_JWT_KEY, { expiresIn: '1h' })
     res.
       cookie('access_token', token, {
         httpOnly: true, // El token no será accesible desde JavaScript del lado del cliente

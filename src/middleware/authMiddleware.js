@@ -27,7 +27,7 @@ const loadUserData = (req, res, next) => {
     if (token) {
         try {
             // Verifica el token usando la clave secreta
-            const decodedPayload = jwt.verify(token, config.secret_jwt_key);
+            const decodedPayload = jwt.verify(token, process.env.SECRET_JWT_KEY);
             
             // Si es válido, asigna los datos al objeto de la solicitud
             req.userSessionData = {
