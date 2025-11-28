@@ -64,7 +64,7 @@ const checkAuth = (req, res, next) => {
 };
 // Middleware 3: Requerir autenticación 
 function requireAuth(req, res, next) {
-    const data = req.userSessionData;
+    const data = req.cookies.userSessionData;
     
     // DEBUG: Muestra los datos que se cargaron
     console.log("requireAuth: Datos de Sesión:", data);
