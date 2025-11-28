@@ -4,15 +4,15 @@ const config = require('../config');
 // Middleware 1: Carga los datos del usuario decodificando el JWT
 const loadUserData = (req, res, next) => {
     // 1. Excluir rutas de login para no interferir
-    if (req.path.includes('/logintecnico') || req.path.includes('/logintecnico')) {
+    if (req.path.includes('/logintecnico') || req.path.includes('/LoginTecnico')) {
         return next();
     }
-
+req.userSessionData = null;
     // DEBUG: Muestra si el header de autorización llega
     console.log("Headers Authorization recibidos:", req.headers.authorization); 
 
     // A. Intentar obtener el token de las cookies
-   let token = req.cookies.access_token;  
+   let token = req.cookies.access_token; 
 
     // B. Si no hay cookie, intentar obtenerlo del header Authorization (RESPALDO)
     if (!token) {

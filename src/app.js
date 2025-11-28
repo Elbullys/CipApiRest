@@ -16,18 +16,9 @@ const logintecnico = require('./modulos/Autenticacion/rutasLoginTecnicos');
 const MovComponentes = require('./modulos/MovComponente/rutasMovComponentes');
 const responsables = require('./modulos/Responsables/rutasResponsables');
 const cookieParser = require('cookie-parser');
-const session = require('express-session');
 
-// Configuración básica de la sesión (opcional si solo usas JWT; quítalo si no lo necesitas)
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'tu_secreto_muy_seguro_aqui', 
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        secure: process.env.NODE_ENV === 'production',  // Cambiado: true en producción (HTTPS)
-        maxAge: 1000 * 60 * 60 * 24  // 1 día
-    }
-}));
+
+
 
 // Configuración de CORS
 const allowedOrigins = [
@@ -49,10 +40,10 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
+app.use(express.json());
 // MIDDLEWARES
 app.use(morgan('combined'));  // Cambiado: 'combined' en prod para logs más limpiosprocess.env.NODE_ENV === 'production' ? 
-app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
