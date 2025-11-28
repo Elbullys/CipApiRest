@@ -7,10 +7,12 @@ const loadUserData = (req, res, next) => {
     if (req.path.includes('/logintecnico') || req.path.includes('/LoginTecnico')) {
         return next();
     }
-
+// *** NUEVA LÍNEA DE DEPURACIÓN ***
+    console.log("Headers Authorization recibidos:", req.headers.authorization);
     // 1. Intentar obtener el token de las cookies
     let token = req.cookies.access_token;  
 
+    console.log("token recibido, ",token);
     // 2. Si no hay cookie, intentar obtenerlo del header Authorization
     if (!token) {
         const authHeader = req.headers.authorization;
@@ -61,7 +63,7 @@ const checkAuth = (req, res, next) => {
 // Middleware 3: Requerir autenticación (Maneja el 401 que estabas viendo)
 function requireAuth(req, res, next) {
     const data = req.userSessionData;
-
+    console.log("req.userSessionData",req.userSessionData);
     if (data && data.usuario) {
         // Usuario autenticado, se cargan las variables si es necesario
         req.username = data.usuario;
