@@ -44,8 +44,8 @@ router.post("/logintecnico" ,async function (req, res, next) {
         httpOnly: true, // El token no será accesible desde JavaScript del lado del cliente
         secure: process.env.NODE_ENV === 'production',  // true en producción (HTTPS)
         sameSite: "None",//Strict // Asegura que la cookie solo se envíe en solicitudes del mismo sitio
-        maxAge: 1000 * 60 * 60 // 1 hora en milisegundos
-       // domain:'apirestcip.onrender.com'// config.domain ||, // Ajusta el dominio según sea necesario
+        maxAge: 1000 * 60 * 60, // 1 hora en milisegundos
+        domain:'apirestcip.onrender.com',// config.domain ||, // Ajusta el dominio según sea necesario
       })
 
     res.send({

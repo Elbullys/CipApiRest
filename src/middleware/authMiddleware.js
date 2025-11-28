@@ -3,42 +3,30 @@ const config = require('../config');
 
 // Middleware 1: Carga los datos del usuario decodificando el JWT de la cookie
 const loadUserData = (req, res, next) => {
-    
-    // 1. Excluye rutas públicas (ej. el login)
-    // Usamos includes para ser flexibles con la ruta completa.
-   if (req.path.includes('/logintecnico') || req.path.includes('/LoginTecnico')) {
-        
+    // Excluye rutas públicas
+    if (req.path.includes('/logintecnico') || req.path.includes('/LoginTecnico')) {
         return next();
     }
 
-    // 2. Intentar cargar el usuario desde la cookie JWT
+    console.log("Cookies recibidas:", req.cookies);  // Agrega esto: Verifica si access_token llega
     const token = req.cookies.access_token;
-    console.log("token",token);
+    console.log("Token recibido:", token ? "Presente" : "Ausente");  // Agrega esto
+
     if (token) {
         try {
-           
-            console.log("veirficiando token, si existe",token);
-            // Decodificar el token usando la clave secreta
             const decodedPayload = jwt.verify(token, config.secret_jwt_key);
-            
-            // Adjuntar los datos decodificados a la solicitud para uso posterior
             req.userSessionData = {
                 usuario: decodedPayload.usuario,
                 id_tecnico: decodedPayload.id_tecnico,
                 IsAdmin: decodedPayload.IsAdmin
             };
-
-
+            console.log("Datos decodificados:", req.userSessionData);  // Agrega esto
         } catch (err) {
-            // Si el token es inválido (expirado, mal formato, etc.), la solicitud
-            // continúa sin req.userSessionData. El middleware 'checkAuth' manejará el 401.
             console.error("Error al verificar JWT:", err.message);
-            // Opcional: limpiar la cookie inválida si el error es de expiración
-            // res.clearCookie('access_token'); 
         }
+    } else {
+        console.log("No hay token en cookies");  // Agrega esto
     }
-
-    // Continúa con la solicitud. req.userSessionData será undefined si no hay token o es inválido.
     next();
 };
 
