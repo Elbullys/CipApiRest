@@ -9,7 +9,7 @@ const controlador = require("./controladorReporteRetiro"); // Importamos el cont
 
 
 router.get("/ConsultaTotalRetirosEnTransito", async function (req, res, next) {
-    const cacheKey = config.cacheKey; // Alias para mayor claridad
+    //const cacheKey = config.cacheKey; // Alias para mayor claridad
 /*
     // 1. INTENTA OBTENER DATOS DE LA CACHÉ
     let data = config.my_cache.get(cacheKey);
