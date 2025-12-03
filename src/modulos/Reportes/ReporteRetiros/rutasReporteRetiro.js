@@ -12,20 +12,20 @@ router.get("/ConsultaTotalRetirosEnTransito", async function (req, res,next) {
   // Verifica si myCache es válido (para depuración)
        
 
-    let data = config.my_cache.get(config.cacheKey);
+    /*let data = config.my_cache.get(config.cacheKey);
     if (data) {
       console.log('Datos desde cache');
       return res.json(data);
-    }
+    }*/
    //const id_unidad = req.query.id_unidad; // Obtenemos ID unidad desde la consulta
   //const searchTerm = req.query.searchTerm; // Obtenemos el area a buscar desde la consulta
   try {
   
     const items = await controlador.ctl_consulta_TotalRetirosEnTransito();
-    config.my_cache.set(config.cacheKey, JSON.stringify(data));
-    console.log('Valor en cache para la clave:', config.my_cache.get(config.cacheKey));
-    const EquiposEnTransito=items[0].EquiposEnTransito;
-    console.log();
+    //config.my_cache.set(config.cacheKey, JSON.stringify(items));
+    //console.log('Valor en cache para la clave:', config.my_cache.get(config.cacheKey));
+    //const EquiposEnTransito=items[0].EquiposEnTransito;
+    //console.log();
     respuesta.success(req, res, 200);
     // Llamamos al método todos del controlador
   } catch (err) {
