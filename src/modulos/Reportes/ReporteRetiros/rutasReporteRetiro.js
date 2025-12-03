@@ -8,29 +8,45 @@ const controlador = require("./controladorReporteRetiro"); // Importamos el cont
  
 
 
-router.get("/ConsultaTotalRetirosEnTransito", async function (req, res,next) {
-  // Verifica si myCache es válido (para depuración)
-       
+router.get("/ConsultaTotalRetirosEnTransito", async function (req, res, next) {
+    const cacheKey = config.cacheKey; // Alias para mayor claridad
 
-    /*let data = config.my_cache.get(config.cacheKey);
+    // 1. INTENTA OBTENER DATOS DE LA CACHÉ
+    let data = config.my_cache.get(cacheKey);
+
     if (data) {
-      console.log('Datos desde cache');
-      return res.json(data);
-    }*/
-   //const id_unidad = req.query.id_unidad; // Obtenemos ID unidad desde la consulta
-  //const searchTerm = req.query.searchTerm; // Obtenemos el area a buscar desde la consulta
-  try {
-  
-    const items = await controlador.ctl_consulta_TotalRetirosEnTransito();
-    //config.my_cache.set(config.cacheKey, JSON.stringify(items));
-    //console.log('Valor en cache para la clave:', config.my_cache.get(config.cacheKey));
-    //const EquiposEnTransito=items[0].EquiposEnTransito;
-    //console.log();
-    respuesta.success(req, res, 200);
-    // Llamamos al método todos del controlador
-  } catch (err) {
-    next(err);
-  }
+        // Si hay datos en caché, envíalos DIRECTAMENTE
+        // Ya que guardaremos un objeto/valor JS (no una cadena JSON)
+        console.log('Datos desde cache');
+        return respuesta.success(req, res, data); 
+    }
+
+    // 2. SI NO HAY CACHÉ, CONSÚLTA LA BASE DE DATOS
+    try {
+        const items = await controlador.ctl_consulta_TotalRetirosEnTransito();
+        
+        // 🛑 VALIDACIÓN (como se recomendó antes) 🛑
+        if (!items || items.length === 0) {
+            // Evita el error items[0] si el arreglo está vacío.
+            config.my_cache.set(cacheKey, 0); 
+            return respuesta.success(req, res, 0); 
+        }
+
+        // 3. ALMACENAR DATOS SIN JSON.stringify()
+        // Guarda el objeto o el valor que quieras enviar. 
+        // Si quieres enviar el arreglo completo:
+        config.my_cache.set(cacheKey, items); 
+        
+        console.log('Valor guardado en cache:', items);
+
+        // 4. ENVÍA LA RESPUESTA
+        // Envía el objeto/arreglo que acabas de guardar.
+        respuesta.success(req, res, items); 
+
+    } catch (err) {
+        // En caso de error de DB o procesamiento
+        next(err);
+    }
 });
 
 module.exports = router;
