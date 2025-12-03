@@ -200,13 +200,12 @@ async function EditarComponentePorID(tabla, idComponente, data, codigo_TI) {
       SET FK_Factura= ?,operacion= ?,numero_serie = ?, estado_equipo = ?,
       numero_consecutivo = ?,codigo_TI = ?,observaciones = ?,
       status_componente = ?,status_inventario = ?,FK_id_responsable = ?, FK_id_unidad = ?,
-      FK_id_dispositivo = ?, FK_id_catalogo_componentes = ?,FK_id_area = ?, 
-      FK_IdTecnico = ? , EsClienteServidor = ?, FechaCompra = ? 
+      FK_id_dispositivo = ?, FK_id_catalogo_componentes = ?,FK_id_area = ? , EsClienteServidor = ?, FechaCompra = ? 
       WHERE id_componente = ?
     `, [FK_Factura, operacion, numero_serie, estado_equipo, numero_consecutivo,
       codigo_TI, observaciones, status_componente, status_inventario,
       FK_id_responsable, FK_id_unidad, FK_id_dispositivo, FK_id_catalogo_componentes,
-      FK_id_area, FK_IdTecnico, EsClienteServidor, FechaCompra, idComponente]);
+      FK_id_area, EsClienteServidor, FechaCompra, idComponente]);
     return {result,codigo_TI}; // Retorna el resultado de la consulta
   }
 
