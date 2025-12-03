@@ -41,7 +41,7 @@ router.get("/ConsultaTotalRetirosEnTransito", async function (req, res, next) {
 
         // 4. ENVÍA LA RESPUESTA
         // Envía el objeto/arreglo que acabas de guardar.
-        respuesta.success(req, res, items); 
+        respuesta.success(req, res, items,200); 
 
     } catch (err) {
         // En caso de error de DB o procesamiento
