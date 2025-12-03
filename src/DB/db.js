@@ -16,6 +16,7 @@ const pool = mysql.createPool(dbconfig);
 
 // Función para obtener una conexión del pool
 async function getConnection() {
+  
   try {
     const connection = await pool.getConnection();
     console.log("Conexión satisfactoria");
