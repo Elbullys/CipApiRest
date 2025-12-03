@@ -487,7 +487,7 @@ async function consulta_Todas_Facturas(tabla) {
     connection = await getConnection(); // Obtener conexión del pool
 
     const [result] = await connection.query(`
-      SELECT *  FROM ${tabla} ORDER BY IdFactura DESC `);
+      SELECT  IdFactura,NumeroFactura,NombreProveedor,LugarCompra,FechaFactura,Observacion FROM ${tabla} ORDER BY IdFactura DESC `);
 
     return result; // Retorna el resultado de la consulta
   } catch (error) {

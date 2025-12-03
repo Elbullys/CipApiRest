@@ -1,9 +1,9 @@
 const express = require("express");
-const respuesta = require("../../../red/respuestas"); // Importamos el archivo de respuestas
- 
+const respuesta = require("../../red/respuestas"); // Importamos el archivo de respuestas
+
 const router = express.Router();
 
-const config=require("../../../config");
+//const config=require("../config");
 const controlador = require("./controladorReporteRetiro"); // Importamos el controlador
  
 

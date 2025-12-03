@@ -18,7 +18,7 @@ const tecnicos = require('./modulos/Tecnicos/rutasTecnicos');
 const logintecnico = require('./modulos/Autenticacion/rutasLoginTecnicos');
 const MovComponentes = require('./modulos/MovComponente/rutasMovComponentes');
 const responsables = require('./modulos/Responsables/rutasResponsables');
-const reporteRetiros = require('./modulos/Reportes/ReporteRetiros/rutasReporteRetiro');
+const reporteRetiros = require('./modulos/Reportes/rutasReporteRetiro');
 
 
 
