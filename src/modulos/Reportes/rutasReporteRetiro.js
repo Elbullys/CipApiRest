@@ -24,13 +24,7 @@ router.get("/ConsultaTotalRetirosEnTransito", async function (req, res, next) {
     // 2. SI NO HAY CACHÉ, CONSÚLTA LA BASE DE DATOS
     try {
         const items = await controlador.ctl_consulta_TotalRetirosEnTransito();
-        
-        // 🛑 VALIDACIÓN (como se recomendó antes) 🛑
-        if (!items || items.length === 0) {
-            // Evita el error items[0] si el arreglo está vacío.
-            //config.my_cache.set(cacheKey, 0); 
-            return respuesta.success(req, res, 0,200); 
-        }
+      
 
         // 3. ALMACENAR DATOS SIN JSON.stringify()
         // Guarda el objeto o el valor que quieras enviar. 

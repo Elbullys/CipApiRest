@@ -7,7 +7,9 @@ const dbconfig = {
   password: config.mysql.password,
   database: config.mysql.database,
   waitForConnections: true,
-  connectionLimit: 50, // Ajusta según necesidad
+  connectTimeout: 60000,  // 60 segundos (aumenta de ~10s por defecto)
+  connectionLimit: 5, // Ajusta según necesidad
+
   queueLimit: 0
 };
 
@@ -16,7 +18,7 @@ const pool = mysql.createPool(dbconfig);
 
 // Función para obtener una conexión del pool
 async function getConnection() {
-  
+
   try {
     const connection = await pool.getConnection();
     console.log("Conexión satisfactoria");
