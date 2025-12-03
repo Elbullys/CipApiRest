@@ -22,7 +22,7 @@ router.get("/ConsultaTotalRetirosEnTransito", async function (req, res,next) {
   try {
   
     const items = await controlador.ctl_consulta_TotalRetirosEnTransito();
-    config.my_cache.set(config.cacheKey, items[0].EquiposEnTransito);
+    config.my_cache.set(config.cacheKey, JSON.stringify(data));
     console.log('Valor en cache para la clave:', config.my_cache.get(config.cacheKey));
     const EquiposEnTransito=items[0].EquiposEnTransito;
     console.log();
