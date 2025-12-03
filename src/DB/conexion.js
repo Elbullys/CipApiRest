@@ -651,6 +651,7 @@ async function consulta_TotalRetirosEnTransito(tabla) {
   const status_retiro='DOCUMENTO GENERADO';
   try {
     connection = await getConnection(); // Obtener conexión del pool
+    console.log("connection",connection);
     const [result] = await connection.query(`SELECT COUNT(IdRetiroEquipo) AS EquiposEnTransito FROM ${tabla} WHERE status_retiro='DOCUMENTO GENERADO'
     `);
     return result; // Retorna el resultado de la consulta

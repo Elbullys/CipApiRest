@@ -1,5 +1,5 @@
 const db = require('../../DB/conexion');
-const Utils = require("../Utils"); // Importamos el archivo de respuestas
+//const Utils = require("../Utils"); // Importamos el archivo de respuestas
 
 const TABLA= 'reporte_retiro_equipo';
 

@@ -29,7 +29,7 @@ router.get("/ConsultaTotalRetirosEnTransito", async function (req, res, next) {
         if (!items || items.length === 0) {
             // Evita el error items[0] si el arreglo está vacío.
             //config.my_cache.set(cacheKey, 0); 
-            return respuesta.success(req, res, 0); 
+            return respuesta.success(req, res, 0,200); 
         }
 
         // 3. ALMACENAR DATOS SIN JSON.stringify()
