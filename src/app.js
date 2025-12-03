@@ -46,7 +46,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 // MIDDLEWARES
-app.use(morgan('combined')); //dev // Cambiado: 'combined' en prod para logs más limpiosprocess.env.NODE_ENV === 'production' ? 
+app.use(morgan('dev')); //dev // Cambiado: 'combined' en prod para logs más limpiosprocess.env.NODE_ENV === 'production' ? 
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

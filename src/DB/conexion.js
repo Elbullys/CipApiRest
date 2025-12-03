@@ -714,5 +714,5 @@ module.exports = {
   agregarMovimientoComponente,
 
   //*REPORTES DE RETIROS
-consulta_TotalRetirosEnTransito,
+consulta_TotalRetirosEnTransito
 };
