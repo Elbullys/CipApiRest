@@ -643,6 +643,27 @@ const idtecnico=componenteMovFinal.FK_IdTecnico;
 }
 
 
+//consulta_TotalRetirosEnTransito
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//*REPORTES DE RETIROS*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+async function consulta_TotalRetirosEnTransito(tabla) {
+  let connection;
+  const status_retiro='DOCUMENTO GENERADO';
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`SELECT COUNT(IdRetiroEquipo) AS EquiposEnTransito FROM ${tabla} WHERE status_retiro=?
+    `, [status_retiro]);
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
 
 module.exports = {
   //COMPONENTES
@@ -692,4 +713,6 @@ module.exports = {
   //INSERT
   agregarMovimientoComponente,
 
+  //*REPORTES DE RETIROS
+consulta_TotalRetirosEnTransito,
 };

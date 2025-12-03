@@ -61,12 +61,7 @@ router.get("/ConsultarCodigoTINumSerie/:databusqueda", async function (req, res,
 router.get("/ConsultarIdComponente/:idcomponente", async function (req, res,next) {
   try {
     const id_componente =req.params.idcomponente; // Obtenemos el código TI desde la consulta
-    const items = await controlador.ctl_consulta_Id_Componente(id_componente); 
-if(items)
-  {
-    req.session.componenteMovAnterior = items;
-    
-  }    
+    const items = await controlador.ctl_consulta_Id_Componente(id_componente);    
     respuesta.success(req, res, items, 200);
     // Llamamos al método todos del controlador
   } catch (err) {

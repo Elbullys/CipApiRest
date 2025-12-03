@@ -1,4 +1,9 @@
 // utils.js - Archivo para funciones y utilidades globales reutilizables
+const NodeCache = require('node-cache');
+// Configura el cache con opciones opcionales
+// - stdTTL: Tiempo de vida por defecto en segundos (ej. 300 = 5 minutos)
+// - checkperiod: Intervalo para verificar expiraciones (ej. 60 segundos)
+// - useClones: Evita mutaciones en los datos almacenados
 
 class Validar_datos {
 
@@ -107,5 +112,6 @@ class ConversionPasswords {
 module.exports = {
     //VALIDAD CAMPOS 
     Validar_datos,
-    ConversionPasswords,
+    ConversionPasswords
+    
 };
