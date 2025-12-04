@@ -68,7 +68,7 @@ app.use('/api/tecnicos', tecnicos);
 app.use('/api/logintecnicos', logintecnico);
 app.use('/api/movComponentes', MovComponentes);
 app.use('/api/responsables', responsables);
-app.use('/api/reportes/reporteDashboard', reporteDashboard);
+app.use('/api/reportes/reporteDashboard',requireAuth, reporteDashboard);
 
 app.use(error);
 
