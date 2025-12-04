@@ -18,7 +18,7 @@ const tecnicos = require('./modulos/Tecnicos/rutasTecnicos');
 const logintecnico = require('./modulos/Autenticacion/rutasLoginTecnicos');
 const MovComponentes = require('./modulos/MovComponente/rutasMovComponentes');
 const responsables = require('./modulos/Responsables/rutasResponsables');
-const reporteRetiros = require('./modulos/Reportes/ReporteRetiros/rutasReporteRetiro');
+const reporteDashboard = require('./modulos/Reportes/rutasDashboard');
 
 
 
@@ -68,7 +68,7 @@ app.use('/api/tecnicos', tecnicos);
 app.use('/api/logintecnicos', logintecnico);
 app.use('/api/movComponentes', MovComponentes);
 app.use('/api/responsables', responsables);
-app.use('/api/reportes/reporteretiro', reporteRetiros);
+app.use('/api/reportes/reporteDashboard', reporteDashboard);
 
 app.use(error);
 
