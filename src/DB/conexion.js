@@ -1,7 +1,8 @@
 const { getConnection } = require("./db");
 const config = require("../config");
 
-//COMPONENTES
+//*COMPONENTES
+//CONSULTA
 async function consulta_componente(tabla) {
   let connection;
   try {
@@ -158,6 +159,215 @@ async function consulta_Max_consecutivo_PorDispositivo_y_Operacion(tabla, FK_id_
   }
 }
 
+async function consulta_conteo_componentes_TipoUnidad(tabla) {
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      SELECT A.tipo_unidad,COUNT(C.id_componente) AS Total_Componentes FROM
+       ${tabla} C
+      JOIN
+    area A ON A.id_area = C.FK_id_area
+    where C.status_inventario=1 
+GROUP BY
+    A.tipo_unidad 
+    ORDER BY
+            Total_Componentes DESC; -- Opcional: ordenar por cantidad
+    `);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+async function consulta_conteo_componentes_ActivoBaja(tabla) {
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      SELECT status_inventario,COUNT(C.id_componente) AS totalcomponentes FROM
+       ${tabla} C
+GROUP BY
+    C.status_inventario
+  
+    `);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+//INVENTARIO COMPONENTES POR COLECTIVO
+async function InventarioComponentesPorColectivo(BusquedaEncabezados) {
+
+  const { id_unidad, IdResponsable, id_area, id_dispositivo, id_catalogo_componente, status_componente }
+    = BusquedaEncabezados;
+  console.log("BusquedaEncabezados en bd:", BusquedaEncabezados);
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      SELECT 'Unidad' AS Tipo, id_unidad AS ID, nombre_unidad AS Nombre FROM  unidad WHERE id_unidad = ? UNION ALL
+      SELECT 'Responsable' AS Tipo, id_responsable AS ID, nombre_responsable AS Nombre FROM responsable WHERE id_responsable = ? UNION ALL
+      SELECT 'Area' AS Tipo, id_area AS ID, area AS Nombre FROM area WHERE id_area = ? UNION ALL
+      SELECT 'Dispositivo' AS Tipo,  id_dispositivo AS ID,  tipo_equipo AS Nombre FROM dispositivos WHERE id_dispositivo = ? UNION ALL
+      SELECT 'Catalogo Componente' AS Tipo, id_catalogo_componente AS ID, nombre_catalogo AS Nombre FROM catalogo_componentes WHERE id_catalogo_componente = ?
+
+    
+    `, [id_unidad, IdResponsable, id_area, id_dispositivo, id_catalogo_componente]);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+// INVENTARIO: Verificar existencia, duplicados y buscar coincidencias si no existe
+
+async function verificarnumeroserieComponenteExistenciaDuplicadoArray(tabla, series) {
+  if (!series || series.length === 0) return { resultados: [] };
+
+  let connection;
+  try {
+    connection = await getConnection();
+
+    // 1. Verificación exacta (agregado status_inventario)
+    const queryExacta = `
+      SELECT numero_serie, id_componente, status_inventario, COUNT(*) as conteo 
+      FROM ?? 
+      WHERE numero_serie IN (?) 
+      GROUP BY numero_serie, id_componente, status_inventario`;
+
+    const [dbRows] = await connection.query(queryExacta, [tabla, series]);
+
+    const dbMap = new Map();
+    dbRows.forEach(row => {
+      const s = row.numero_serie.toString().trim();
+      if (!dbMap.has(s)) {
+        dbMap.set(s, { id: row.id_componente, conteo: 0, status: row.status_inventario });
+      }
+      dbMap.get(s).conteo += row.conteo;
+    });
+
+    const resultados = [];
+
+    for (const serie of series) {
+      const s = serie?.toString().trim();
+      const data = dbMap.get(s);
+
+      let existe = data ? data.conteo > 0 : false;
+      let duplicado = data ? data.conteo > 1 : false;
+      let detalles = '';
+
+      if (duplicado) {
+        detalles = `Repetido ${data.conteo} veces en sistema`;
+      } else if (!existe) {
+        // --- LÓGICA DE SUGERENCIAS MEJORADA ---
+        // Tomamos los primeros 5 caracteres para buscar por prefijo (Caso: rendnfnd -> rendnfn)
+        const prefijo = s.substring(0, 5);
+
+        const querySimilitud = `
+          SELECT numero_serie, id_componente 
+          FROM ?? 
+          WHERE numero_serie LIKE ? 
+          LIMIT 3`;
+
+        // Buscamos cualquier cosa que empiece igual (prefijo%) 
+        const [simRows] = await connection.query(querySimilitud, [tabla, `${prefijo}%`]);
+
+        if (simRows.length > 0) {
+          // Filtramos para no mostrar la misma serie si por algo falló la exacta
+          const sugerenciasFiltradas = simRows
+            .filter(r => r.numero_serie !== s)
+            .map(r => `${r.numero_serie} (ID:${r.id_componente})`)
+            .join(' | ');
+
+          detalles = sugerenciasFiltradas ? `Sugerencias: ${sugerenciasFiltradas}` : 'Sin coincidencias';
+        } else {
+          detalles = 'Sin coincidencias';
+        }
+      }
+
+      // --- LÓGICA PARA STATUS_INVENTARIO ---
+      // Si existe y status_inventario == 0, agregar a detalles como "BAJA"
+      if (existe && data.status == 0) {
+        detalles += (detalles ? ' | ' : '') + 'Status Inventario: BAJA';
+      }
+      // Si status_inventario == 1, no se agrega nada adicional
+
+      resultados.push({
+        serie: s,
+        existe,
+        duplicado,
+        detalles,
+        status_inventario: data ? data.status : null  // Nuevo: devolver status para que el frontend lo use
+      });
+    }
+
+    return { resultados };
+
+  } catch (error) {
+    console.error("Error en verificación:", error);
+    throw error;
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+
+
+async function consultaComponentesColectivoArray(tabla, componentes) {
+  let connection;
+  try {
+    connection = await getConnection();
+
+    // 1. Extraemos solo los números de serie en un array simple
+    const series = componentes.componentes.map(comp => comp.serie);
+
+    if (series.length === 0) return { results: [] };
+
+    // 2. Hacemos UNA SOLA consulta para todas las series
+    // El query usa IN (?) que acepta un array de valores
+    const [results] = await connection.query(`
+      SELECT 
+        operacion, status_componente, observaciones,
+        numero_serie, FK_id_unidad, FK_id_area, FK_id_catalogo_componentes,
+         CT.num_contrato_actual, codigo_TI, id_componente, status_inventario
+      FROM ?? 
+       INNER JOIN contrato CT ON CT.id_contrato = (
+          SELECT MAX(id_contrato) FROM contrato
+      )
+      WHERE numero_serie IN (?)
+    `, [tabla, series]);
+
+    // Importante: mysql2 devuelve los resultados directamente en un array
+    return { results };
+
+  } catch (error) {
+    console.error("[db error]", error);
+    throw new Error(`Error en la Consulta: ${error.message}`);
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
 //UPDTATE
 async function EditarComponenteFactura(tabla, idComponente, data) {
   let connection;
@@ -186,14 +396,14 @@ async function EditarComponenteFactura(tabla, idComponente, data) {
 
 async function EditarComponentePorID(tabla, idComponente, data, codigo_TI) {
   let connection;
- console.log("data en bd",data);
+  console.log("data en bd", data);
   try {
     const { FK_Factura, operacion, numero_serie, estado_equipo, numero_consecutivo, observaciones, status_componente, status_inventario,
       FK_id_responsable, FK_id_unidad, FK_id_dispositivo, FK_id_catalogo_componentes,
       FK_id_area, FK_IdTecnico, EsClienteServidor, FechaCompra,
     } = data;
 
-   
+
     connection = await getConnection(); // Obtener conexión del pool
     const [result] = await connection.query(`
       UPDATE ${tabla} 
@@ -207,7 +417,7 @@ async function EditarComponentePorID(tabla, idComponente, data, codigo_TI) {
       codigo_TI, observaciones, status_componente, status_inventario,
       FK_id_responsable, FK_id_unidad, FK_id_dispositivo, FK_id_catalogo_componentes,
       FK_id_area, FK_IdTecnico, EsClienteServidor, FechaCompra, idComponente]);
-    return {result,codigo_TI}; // Retorna el resultado de la consulta
+    return { result, codigo_TI }; // Retorna el resultado de la consulta
   }
 
   catch (error) {
@@ -219,6 +429,50 @@ async function EditarComponentePorID(tabla, idComponente, data, codigo_TI) {
     }
   }
 }
+
+async function actualizarComponentesColectivo(tabla, componentes) {
+  let connection;
+  try {
+    connection = await getConnection();
+
+    // Para batch updates, usa un loop (cada UPDATE es individual)
+    const results = [];
+    for (const comp of componentes) {
+      const [result] = await connection.query(`
+        UPDATE ??
+        SET 
+            observaciones = ?,
+            status_componente = ?,
+            FK_id_responsable = ?,
+            FK_id_unidad = ?,
+            FK_id_catalogo_componentes = ?,
+            FK_id_area = ?
+        WHERE numero_serie = ? 
+      `, [
+        tabla,
+        comp.observacion || 'SO',
+        comp.status_componente,
+        comp.id_responsable,
+        comp.id_unidad,
+        comp.id_catalogo_componentes,
+        comp.id_area,
+        comp.serie  // WHERE por serie
+      ]);
+      results.push(result);
+    }
+
+    return { results, updatedCount: results.length };
+  } catch (error) {
+    console.error("[db error]", error);
+    throw new Error(`Error en actualización: ${error.message}`);
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+}
+
+
 
 
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
@@ -321,7 +575,7 @@ async function consulta_ResponsablePorUnidad(tabla, searchTerm, idUnidad) {
       SELECT R.id_responsable ,R.nombre_responsable,R.cargo,U.nombre_unidad ,A.Area
       FROM ${tabla} R JOIN unidad U ON U.id_unidad=R.FK_idunidad JOIN area AS A ON A.id_area=R.FK_id_area 
       WHERE  R.FK_idunidad = ? AND R.nombre_responsable LIKE ?  AND R.estado_responsable = 'ACTIVO' 
-    `, [ idUnidad,'%' + searchTerm + '%']);
+    `, [idUnidad, '%' + searchTerm + '%']);
 
     return result; // Retorna el resultado de la consulta
   } catch (error) {
@@ -476,6 +730,39 @@ async function consulta_Todos_Catalogos_Por_Dispositivo(tabla, IdDispositivo) {
   }
 }
 
+//PERMITE REALIZAR EL MUESTREO DE TODOS LOS CATALOGOS EXISTENTES CON BUSQUEDA
+async function ConsultaTodosCatalogosBusqueda(tabla, searchTerm) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      select CC.id_catalogo_componente, CC.nombre_catalogo,CC.descripcion_modelo, D.tipo_equipo,
+       M.marca, M.modelo,CONCAT( CP.Fabricante,' ',CP.serie,' ',CP.modelo) AS 'Procesador',
+       CONCAT (CMR.CapacidadGB,' ',CMR.Tipo) AS 'Memoria Ram',CONCAT(CDD.Tipo,' ',CDD.Capacidad_GB)
+        AS 'Disco Duro', CONCAT (CSO.Nombre,' ',CSO.VersIon_SO,' ',CSO.Arquitectura) AS 'Sistema Operativo'
+         FROM ${tabla} AS CC JOIN dispositivos AS D ON CC.FK_id_dispositivo=D.id_dispositivo  JOIN marca AS M 
+         ON CC.FK_id_marca_cata=M.id_marca JOIN catalogo_componente_caracteristicas AS CCC 
+         ON CCC.id_catalogo_caract=CC.FK_catalogo_caracteristicas JOIN Cat_sistema_operativo 
+         AS CSO ON CSO.IdSistemaOperativo=CCC.SistemaOperativoID JOIN Cat_procesador AS CP 
+         ON CP.IdProcesador=CCC.ProcesadorID JOIN Cat_memoria_ram AS CMR ON 
+         CMR.IdMemoriaRam=CCC.MemoriaRamID JOIN Cat_disco_duro AS CDD ON CDD.IdDiscoDuro=CCC.DiscoDuroID
+          WHERE (CC.nombre_catalogo LIKE ? OR M.marca LIKE ? OR M.modelo LIKE ?)
+          ORDER BY CC.nombre_catalogo ASC
+    `, ['%' + searchTerm + '%', '%' + searchTerm + '%', '%' + searchTerm + '%']);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 //*FACTURAS*/
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
@@ -564,7 +851,7 @@ async function Verificar_Login(tabla, username) {
   }
 }
 
-// Función corregida
+
 async function Verificar_Existencia_usuario_tecnico(tabla, username) {
   let connection;
   try {
@@ -576,10 +863,80 @@ async function Verificar_Existencia_usuario_tecnico(tabla, username) {
     );
     // Si hay resultados, devolver el primer registro (objeto con los datos)
     if (result.length > 0) {
+
       return result[0];  // Devuelve el objeto completo del usuario (ej: { id_tecnico: 1, usuario: 'ejemplo', password: 'hash...' })
     } else {
       return null;  // Usuario no existe
     }
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+async function Verificar_Duplicidad_usuario_tecnico(tabla, username) {
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    // Cambiar a SELECT completo para recuperar los datos (incluyendo el hash de la contraseña)
+    const [result] = await connection.query(
+      `SELECT nombre,PasswordWeb,cargo,usuario,id_tecnico,IsAdmin FROM ${tabla} WHERE usuario = ?  `,
+      [username]
+    );
+    // Si hay resultados, devolver el primer registro (objeto con los datos)
+    if (result.length > 0) {
+
+      return true;  // Devuelve el objeto completo del usuario (ej: { id_tecnico: 1, usuario: 'ejemplo', password: 'hash...' })
+    } else {
+      return false;  // Usuario no existe
+    }
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+async function Consulta_Todos_Tecnicos(tabla, searchTerm) {
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    // Cambiar a SELECT completo para recuperar los datos (incluyendo el hash de la contraseña)
+    const [result] = await connection.query(
+      `SELECT id_tecnico, nombre,cargo,usuario,estatus_tecnico,IsAdmin FROM ${tabla}
+      WHERE nombre LIKE ? OR cargo LIKE ? OR usuario LIKE ? ORDER BY estatus_tecnico DESC`,
+      ['%' + searchTerm + '%', '%' + searchTerm + '%', '%' + searchTerm + '%']
+    );
+    // Si hay resultados, devolver el primer registro (objeto con los datos)
+    return result;
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+async function Consulta_Por_Tecnico(tabla, id_tecnico) {
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    // Cambiar a SELECT completo para recuperar los datos (incluyendo el hash de la contraseña)
+    const [result] = await connection.query(
+      `SELECT id_tecnico, nombre,cargo,usuario,estatus_tecnico,IsAdmin FROM ${tabla}
+      WHERE id_tecnico= ?`,
+      [id_tecnico]
+    );
+    // Si hay resultados, devolver el primer registro (objeto con los datos)
+    return result;
   } catch (error) {
     console.error("[db error]", error);
     throw error; // Lanza el error para manejarlo más arriba
@@ -611,13 +968,77 @@ async function agregarTecnicos(tabla, Data, hashedPassword, passwordCIP) {
   }
 }
 
+//UPDATE 
+
+async function EditartecnicoPorIDConPassword(tabla, id_tecnico, dataTecnico, hashedPassword, passwordCIP) {
+  let connection;
+  console.log("data en bd", dataTecnico);
+  try {
+    const {
+      nombre, usuario, password, cargo, estatus_tecnico, IsAdmin
+
+    } = dataTecnico;
+
+
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      UPDATE ${tabla} 
+      SET nombre= ?,usuario= ?,password = ?,PasswordWeb = ?, cargo = ?,
+      estatus_tecnico = ?,IsAdmin = ?
+      WHERE id_tecnico = ?
+    `, [nombre, usuario, passwordCIP, hashedPassword, cargo, estatus_tecnico,
+      IsAdmin, id_tecnico]);
+    return { result, usuario }; // Retorna el resultado de la consulta
+  }
+
+  catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+async function EditartecnicoPorIDSinPassword(tabla, id_tecnico, dataTecnico) {
+  let connection;
+  console.log("data en bd", dataTecnico);
+  try {
+    const {
+      nombre, usuario, cargo, estatus_tecnico, IsAdmin
+
+    } = dataTecnico;
+
+
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      UPDATE ${tabla} 
+      SET nombre= ?,usuario= ?, cargo = ?,
+      estatus_tecnico = ?,IsAdmin = ?
+      WHERE id_tecnico = ?
+    `, [nombre, usuario, cargo, estatus_tecnico,
+      IsAdmin, id_tecnico]);
+    return { result, usuario }; // Retorna el resultado de la consulta
+  }
+
+  catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 //*MOVIMIENTO DE COMPONENTES*/
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 //INSERT
-async function agregarMovimientoComponente(tabla, componenteMovAnterior, componenteMovFinal, codigoTI,idComponente) {
+async function agregarMovimientoComponente(tabla, componenteMovAnterior, componenteMovFinal, codigoTI, idComponente) {
   let connection;
-const idtecnico=componenteMovFinal.FK_IdTecnico;
+  const idtecnico = componenteMovFinal.FK_IdTecnico;
   try {
     connection = await getConnection(); // Obtener conexión del pool
     const [result] = await connection.query(`INSERT INTO ${tabla} (
@@ -631,7 +1052,122 @@ const idtecnico=componenteMovFinal.FK_IdTecnico;
         idComponente, componenteMovFinal.numero_contrato_actual, codigoTI, componenteMovFinal.status_inventario, idtecnico
       ]);
     return result; // Retorna el resultado de la consulta
-    
+
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+async function AgregarMovimientoColectivoComponenteArray(tablaMovimientos, tablaComponentes, datosExcel, componentesBD) {
+  let connection;
+
+  // Extraemos los arreglos de los objetos contenedores
+  const listaFinal = datosExcel.componentes || [];
+  const listaAnterior = componentesBD.results || [];
+
+  // El ID del técnico viene dentro de los objetos del excel (asumimos el del primero)
+  const idTecnico = listaFinal.length > 0 ? listaFinal[0].id_tecnico : null;
+  try {
+    connection = await getConnection();
+    // PASO 1: Iniciar Transacción
+    await connection.beginTransaction();
+    // OPTIMIZACIÓN: Creamos un Mapa del Excel para buscar por serie rápidamente
+    // Esto permite que el bucle sepa qué datos nuevos corresponden a cada registro viejo
+    const mapaExcel = new Map(listaFinal.map(item => [item.serie, item]));
+    const resultadosProcesados = [];
+    for (const anterior of listaAnterior) {
+      // Buscamos en el Mapa los datos nuevos usando la serie de la BD
+      const itemNuevo = mapaExcel.get(anterior.numero_serie);
+      // Si la serie existe en la BD pero no venía en el Excel procesado, saltamos
+      if (!itemNuevo) continue;
+
+
+      // 1. REGISTRAR HISTORIAL (MOVIMIENTO)
+      // Se guardan los datos que TENÍA antes (origen) y los que TENDRÁ ahora (destino)
+      const queryMovimiento = `
+                INSERT INTO ?? (
+                    Operacion_origen, StatusComponente_origen, Observaciones_origen, NumeroSerie_origen, 
+                    FK_IdUnidad_origen, FK_IdArea_origen, FK_IdCatalogoComponente_origen,
+                    Operacion_destino, StatusComponente_destino, Observaciones_destino, NumeroSerie_destino, 
+                    FK_IdUnidad_destino, FK_IdArea_destino, FK_IdCatalogoComponente_destino,
+                    FK_Componente,numero_contrato ,CodigoTI,StatusInventario, FechaCambio, FK_TECNICO
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`;
+
+      const paramsMovimiento = [
+        tablaMovimientos,
+        anterior.operacion, anterior.status_componente, anterior.observaciones, anterior.numero_serie,
+        anterior.FK_id_unidad, anterior.FK_id_area, anterior.FK_id_catalogo_componentes,
+        anterior.operacion, itemNuevo.status_componente, itemNuevo.observacion, itemNuevo.serie,
+        itemNuevo.id_unidad, itemNuevo.id_area, itemNuevo.id_catalogo_componentes,
+        anterior.id_componente, anterior.num_contrato_actual, anterior.codigo_TI, anterior.status_inventario, idTecnico
+      ];
+
+      await connection.query(queryMovimiento, paramsMovimiento);
+
+   // 2. UPDATE COMPONENTE
+            const queryUpdate = `
+                UPDATE ?? SET 
+                    FK_id_unidad = ?, 
+                    FK_id_area = ?, 
+                    status_componente = ?, 
+                    observaciones = ?,
+                    FK_id_catalogo_componentes = ?,
+                    FK_id_responsable = ?
+                WHERE id_componente = ?`;
+
+            const paramsUpdate = [
+                tablaComponentes,
+                itemNuevo.id_unidad, 
+                itemNuevo.id_area, 
+                itemNuevo.status_componente, 
+                itemNuevo.observacion,
+                itemNuevo.id_catalogo_componentes,
+                itemNuevo.id_responsable, 
+                anterior.id_componente
+            ];
+
+            await connection.query(queryUpdate, paramsUpdate);
+            // 3. AGREGAR AL ARREGLO DE RESULTADOS
+            // Guardamos un objeto simple que confirme qué se actualizó
+            resultadosProcesados.push({
+                id_componente: anterior.id_componente,
+                serie: anterior.numero_serie,
+                status: 'Actualizado'
+            });
+    }
+
+    // PASO 4: Si todo salió bien, confirmamos cambios
+    await connection.commit();
+   
+    return { 
+            message: "Se Actualizaron "+resultadosProcesados.length + " Registros", 
+            updatedCount: resultadosProcesados.length 
+        };
+
+  } catch (error) {
+    // PASO 5: Si algo falló, deshacemos TODO
+    if (connection) await connection.rollback();
+    console.error("[db transaction error]", error);
+    throw error;
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+async function consulta_Conteo_MovimientosPorDia(tabla) {
+  let connection;
+
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`SELECT COUNT(IdMovimiento) AS ConteoMovimientoPorDia 
+FROM ${tabla} 
+WHERE DATE(FechaCambio) = CURDATE()`);
+    return result; // Retorna el resultado de la consulta
   } catch (error) {
     console.error("[db error]", error);
     throw error; // Lanza el error para manejarlo más arriba
@@ -649,11 +1185,53 @@ const idtecnico=componenteMovFinal.FK_IdTecnico;
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 async function consulta_TotalRetirosEnTransito(tabla) {
   let connection;
-  const status_retiro='DOCUMENTO GENERADO';
+  const status_retiro = 'DOCUMENTO GENERADO';
+  const status_reporte = 1;
   try {
     connection = await getConnection(); // Obtener conexión del pool
-    const [result] = await connection.query(`SELECT COUNT(IdRetiroEquipo) AS EquiposEnTransito FROM ${tabla} WHERE status_retiro=?
-    `, [status_retiro]);
+    const [result] = await connection.query(`SELECT COUNT(IdRetiroEquipo) AS EquiposEnTransito FROM ${tabla} WHERE status_retiro=? AND status_reporte= ? 
+    `, [status_retiro, status_reporte]);
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//*REPORTES MANTENIMIENTO CORRECTIVO*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+async function consulta_Conteo_MantenimientoCorrectivo(tabla) {
+  let connection;
+  const status_reporte_correctivo = 1;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`SELECT COUNT(id_reporte_correctivo) AS ConteoTotalMantCorrectivo FROM ${tabla} WHERE status_reporte_correctivo=? 
+    `, [status_reporte_correctivo]);
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//*REPORTES MANTENIMIENTO PREVENTIVO*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+async function consulta_Conteo_MantenimientoPreventivo(tabla) {
+  let connection;
+  const status_reporte_preventivo = 1;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`SELECT COUNT(id_reporte_preventivo) AS ConteoTotalMantPreventivo FROM ${tabla} WHERE status_reporte_preventivo=? 
+    `, [status_reporte_preventivo]);
     return result; // Retorna el resultado de la consulta
   } catch (error) {
     console.error("[db error]", error);
@@ -666,22 +1244,27 @@ async function consulta_TotalRetirosEnTransito(tabla) {
 }
 
 module.exports = {
-  //COMPONENTES
+  //*COMPONENTES
   //CONSULTA
   consulta_NumSerie_CodigoTI,
   consulta_componente,
   Verificar_Existencia_componente,
   consulta_id_componente,
   consulta_Max_consecutivo_PorDispositivo_y_Operacion,
-
+  consulta_conteo_componentes_TipoUnidad,
+  consulta_conteo_componentes_ActivoBaja,
+  InventarioComponentesPorColectivo,
+  verificarnumeroserieComponenteExistenciaDuplicadoArray,
+  consultaComponentesColectivoArray,
   //UPDATE
   EditarComponenteFactura,
   EditarComponentePorID,
+  actualizarComponentesColectivo,
 
 
-  //UNIDADES
+  //*UNIDADES
   consulta_Por_Unidad,
-  //AREAS
+  //*AREAS
   consulta_Area_Por_TipoUnidad,
   consulta_Todas_Areas_Por_TipoUnidad,
 
@@ -695,6 +1278,7 @@ module.exports = {
   //*CATALOGO COMPONENTES
   consulta_Catalogos_Por_Dispositivo_Busqueda,
   consulta_Todos_Catalogos_Por_Dispositivo,
+  ConsultaTodosCatalogosBusqueda,
 
   //*FACTURAS
   consulta_Todas_Facturas,
@@ -707,12 +1291,28 @@ module.exports = {
   Verificar_Existencia_usuario_tecnico,
   Verificar_Login,
   agregarTecnicos,
+  Verificar_Duplicidad_usuario_tecnico,
+  //CONSULTA
+  Consulta_Todos_Tecnicos,
+  Consulta_Por_Tecnico,
+  //EDITAR
+  EditartecnicoPorIDConPassword,
+  EditartecnicoPorIDSinPassword,
 
 
-  //MOVIMIENTO DE COMPONENTES
+  //*MOVIMIENTO DE COMPONENTES
   //INSERT
   agregarMovimientoComponente,
+  AgregarMovimientoColectivoComponenteArray,
+  //CONSULTA
+  consulta_Conteo_MovimientosPorDia,
 
   //*REPORTES DE RETIROS
-consulta_TotalRetirosEnTransito,
+  consulta_TotalRetirosEnTransito,
+
+  //*REPORTES MANTENIMIENTO CORRECTIVO
+  consulta_Conteo_MantenimientoCorrectivo,
+  //*REPORTES MANTENIMIENTO PREVENTIVO
+  consulta_Conteo_MantenimientoPreventivo,
+
 };

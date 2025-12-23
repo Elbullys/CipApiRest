@@ -41,12 +41,44 @@ async function ctl_AgregarMovimientoComponente(componenteMovAnterior,componenteM
     
 
 }
+async function ctl_consulta_Conteo_MovimientosPorDia(){
+
+         return db.consulta_Conteo_MovimientosPorDia(TABLA);
+
+}
+
+async function ctl_AgregarMovimientoColectivoComponenteArray(datosExcel, componentesBD) {
+    try {
+        // Validaciones de seguridad
+        /*if (!Array.isArray(datosExcel) || datosExcel.length === 0) {
+            return { error: true, message: "No hay datos para procesar." };
+        }*/
+
+        console.log("componentesBD",componentesBD);
+       
+        console.log("datosExcel",datosExcel);
+        const result = await db.AgregarMovimientoColectivoComponenteArray(
+            TABLA, // tu tabla de historial
+            "componentes",             // tu tabla de inventario actual
+            datosExcel, 
+            componentesBD   
+        );
+
+        return result;
+    } catch (error) {
+        return { icon: "error", error: true, message: "Error en la transacción: " + error.message };
+    }
+}
 
 
 
 
 
 module.exports = {
+    //INSERT
     ctl_AgregarMovimientoComponente,
+    ctl_AgregarMovimientoColectivoComponenteArray,
+    //CONSULTAR
+    ctl_consulta_Conteo_MovimientosPorDia,
 
 }

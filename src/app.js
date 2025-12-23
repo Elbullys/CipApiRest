@@ -19,6 +19,7 @@ const logintecnico = require('./modulos/Autenticacion/rutasLoginTecnicos');
 const MovComponentes = require('./modulos/MovComponente/rutasMovComponentes');
 const responsables = require('./modulos/Responsables/rutasResponsables');
 const reporteDashboard = require('./modulos/Reportes/rutasDashboard');
+const inventarios = require('./modulos/Inventarios/RutasInventario');
 
 
 
@@ -58,17 +59,19 @@ app.set('port', config.app.port);
 
 
 // RUTAS
-app.use('/api/componentes', requireAuth, componentes);
+app.use('/api/componentes',requireAuth, componentes);
 app.use('/api/unidades', requireAuth, unidades);
 app.use('/api/areas', requireAuth, areas);
 app.use('/api/dispositivos', requireAuth, dispositivos);
 app.use('/api/CatalogosComponentes', catalogos_componentes);
 app.use('/api/facturas', facturas);
-app.use('/api/tecnicos', tecnicos);
+app.use('/api/tecnicos',requireAuth, tecnicos);
 app.use('/api/logintecnicos', logintecnico);
-app.use('/api/movComponentes', MovComponentes);
+app.use('/api/movComponentes',requireAuth, MovComponentes);
 app.use('/api/responsables', responsables);
-app.use('/api/reportes/reporteDashboard',requireAuth, reporteDashboard);
+app.use('/api/reportes',requireAuth, reporteDashboard);
+app.use('/api/inventarios', inventarios);
+
 
 app.use(error);
 

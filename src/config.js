@@ -16,6 +16,8 @@ module.exports = {
         checkperiod: 60  // Intervalo de revisión en segundos
     }),
     cacheKey: 'cacheConsRetTransito',
+    cacheKeyChart: 'TipoUnidad',
+    cacheKeyChartActivoBaja: 'CharActivoBAJA',
     salt_rounds: process.env.SALT_ROUNDS || 20,
     secret_jwt_key: process.env.SECRET_JWT_KEY,
     secure_cookie: process.env.SECURE_COOKIE === 'true',

@@ -33,4 +33,19 @@ router.get("/ConsultaTodosCatalogoPorDispositivo", requireAuth,async function (r
     next(err);
   }
 });
+
+//CONSULTAR CATALOGO COMPONENTES TODOS CON BUQUEDA
+router.get("/ConsultaTodosCatalogosBusqueda", async function (req, res,next) {
+  
+   
+  const searchTerm = req.body.searchTerm; // Obtenemos el area a buscar desde la consulta
+  try {
+  
+    const items = await controlador.ctl_ConsultaTodosCatalogosBusqueda(searchTerm);
+    respuesta.success(req, res, items, 200);
+    // Llamamos al método todos del controlador
+  } catch (err) {
+    next(err);
+  }
+});
 module.exports = router;

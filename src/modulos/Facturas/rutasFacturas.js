@@ -31,6 +31,7 @@ router.get("/ConsultaTodasFacturas", async function (req, res,next) {
     next(err);
   }
 });
+//
 
 /****************************************************************************************************** */
 //INSERT

@@ -40,6 +40,7 @@ router.post("/logintecnico", async function (req, res, next) {
     data: {
         error: false,
         message: items.message || 'Login exitoso',
+        icon:"success",
         // Opcional: Ya no es necesario enviar el token en el cuerpo
         // token: token 
     },

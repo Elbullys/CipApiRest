@@ -42,6 +42,93 @@ async function ctl_consulta_Id_Componente(id_componente) {
     return db.consulta_id_componente(TABLA, id_componente);
 }
 
+async function ctl_consulta_conteo_componentes_TipoUnidad() {
+    return db.consulta_conteo_componentes_TipoUnidad(TABLA);
+}
+async function ctl_consulta_conteo_componentes_ActivoBaja() {
+    return db.consulta_conteo_componentes_ActivoBaja(TABLA);
+}
+
+//Inventario carga componente por colectivo 
+async function ctl_InventarioComponentesPorColectivo(BusquedaEncabezados) {
+    
+    const {id_unidad,IdResponsable,id_area,id_dispositivo,id_catalogo_componente,status_componente}
+    =BusquedaEncabezados;
+ const validarid_unidad = Utils.Validar_datos.validar_Campos_Numeric(id_unidad);
+ const validarIdResponsable = Utils.Validar_datos.validar_Campos_Numeric(IdResponsable);
+ const validarid_area = Utils.Validar_datos.validar_Campos_Numeric(id_area);
+ const validarid_dispositivo = Utils.Validar_datos.validar_Campos_Numeric(id_dispositivo);
+ const validarid_catalogo_componente = Utils.Validar_datos.validar_Campos_Numeric(id_catalogo_componente);
+ const validarid_status_componente = Utils.Validar_datos.validar_Campos_String(status_componente);
+    
+ if (validarid_unidad.error || validarIdResponsable.error || validarid_area.error || validarid_dispositivo.error
+        || validarid_catalogo_componente.error || validarid_status_componente.error 
+    ) {
+        // Array de todas las validaciones para iterar
+        const validations = [validarid_unidad, validarIdResponsable, validarid_area, validarid_dispositivo
+            , validarid_catalogo_componente, validarid_status_componente
+        ];
+
+        // Encontrar la primera validación que falló
+        const failedValidation = validations.find(val => val.error);
+
+
+        return {
+            icon: failedValidation.icon || "warning",
+            error: true,
+            message: failedValidation.message || "Campo no válido",
+        };
+    }
+ 
+ return db.InventarioComponentesPorColectivo(TABLA, BusquedaEncabezados);
+}
+
+//INVENTARIO verificar numeros de serie existencia y duplicados
+async function ctl_verificarnumeroserieComponenteExistenciaDuplicadoArray(series) {
+  // Validar que 'series' es un array
+  if (!Array.isArray(series) || series.length === 0) {
+    return { icon: "warning", error: true, message: "Envía un array de series válido." };
+  }
+
+  // Sanitiza: filtra strings vacíos o no strings
+  const seriesFiltradas = series.filter(s => typeof s === 'string' && s.trim() !== '');
+  if (seriesFiltradas.length === 0) {
+    return { icon: "warning", error: true, message: "No hay series válidas para verificar." };
+  }
+
+  // Limita para rendimiento
+  if (seriesFiltradas.length > 1000) {
+    return { icon: "warning", error: true, message: "Máximo 1000 series por request." };
+  }
+
+  try {
+
+    const result = await db.verificarnumeroserieComponenteExistenciaDuplicadoArray(TABLA, seriesFiltradas);
+    return result;  // Retorna { resultados } con detalles de similitudes
+  } catch (error) {
+    console.error("Error en controlador:", error);
+    return { icon: "error", error: true, message: error.message };
+  }
+}
+
+//INVENTARIO SELECCIONAR DATOS ANTERIORES ANTES DE ACTUALIZAR COLECTIVO DE COMPONENTES
+async function ctl_consultaComponentesColectivoArray(componentes) {
+
+
+
+  try {
+   
+    const result = await db.consultaComponentesColectivoArray(TABLA, componentes);
+    return result;  // Retorna { resultados } con detalles de similitudes
+  } catch (error) {
+    console.error("Error en controlador:", error);
+    return { icon: "error", error: true, message: error.message };
+  }
+}
+
+
+
+
 /**//////////////////////////////////////////////////////////////////////////////////////////////////// */
 //UPDATE
 /**//////////////////////////////////////////////////////////////////////////////////////////////////// */
@@ -174,6 +261,18 @@ const validarFK_id_unidadAnterior = Utils.Validar_datos.validar_Campos_Numeric(d
     }
 
 }
+async function ctl_actualizarComponentesColectivo(componentes) {
+  if (!Array.isArray(componentes) || componentes.length === 0) {
+    return { icon: "warning", error: true, message: "Envía un array de componentes válido." };
+  }
+
+  try {
+    const result = await db.actualizarComponentesColectivo(TABLA, componentes);
+    return result;
+  } catch (error) {
+    return { icon: "error", error: true, message: error.message };
+  }
+}
 
 module.exports = {
     //CONSULTA
@@ -181,8 +280,14 @@ module.exports = {
     consulta_componente,
     ctl_verificar_id_componente_QR_Num_Serie,
     ctl_consulta_Id_Componente,
+    ctl_consulta_conteo_componentes_TipoUnidad,
+    ctl_consulta_conteo_componentes_ActivoBaja,
+    ctl_InventarioComponentesPorColectivo,
+    ctl_verificarnumeroserieComponenteExistenciaDuplicadoArray,
+    ctl_consultaComponentesColectivoArray,
 
     //UPDATE
     ctl_Editar_ComponenteFactura,
-    ctl_Editar_ComponentePorID
+    ctl_Editar_ComponentePorID,
+    ctl_actualizarComponentesColectivo
 }

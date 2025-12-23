@@ -4,11 +4,11 @@ const respuesta = require("../../../red/respuestas"); // Importamos el archivo d
 const router = express.Router();
 
 
-const controlador = require("./controladorReporteRetiro"); // Importamos el controlador
+const controlador = require("./controladorMantCorrectivo"); // Importamos el controlador
  
 
 
-router.get("/ConteoTotalRetirosEnTransito", async function (req, res,next) {
+/*router.get("/ConteoTotalRetirosEnTransito", async function (req, res,next) {
   // Verifica si myCache es válido (para depuración)
 
   try {
@@ -19,6 +19,6 @@ router.get("/ConteoTotalRetirosEnTransito", async function (req, res,next) {
   } catch (err) {
     next(err);
   }
-});
+});*/
 
 module.exports = router;

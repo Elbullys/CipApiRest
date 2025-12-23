@@ -7,7 +7,7 @@ async function ctl_consulta_TotalRetirosEnTransito(){
      //return db.consulta_NumSerie_CodigoTI(TABLA, IdUnidad); 
 
      
-           return db.consulta_TotalRetirosEnTransito(TABLA);
+         return db.consulta_TotalRetirosEnTransito(TABLA);
 
 }
 

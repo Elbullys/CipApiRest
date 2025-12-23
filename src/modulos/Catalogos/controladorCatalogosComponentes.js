@@ -34,10 +34,17 @@ async function ctl_consulta_Todos_Catalogos_Por_Dispositivo(IdDispositivo){
     
      }
      
-}
+}//ConsultaTodosCatalogosoBusqueda
 
+async function ctl_ConsultaTodosCatalogosBusqueda(searchTerm){
+   
+  
+       return db.ConsultaTodosCatalogosBusqueda(TABLA,searchTerm);
+  
+}
 module.exports = {
     ctl_consulta_Catalogos_Por_Dispositivo_Busqueda,
-    ctl_consulta_Todos_Catalogos_Por_Dispositivo
+    ctl_consulta_Todos_Catalogos_Por_Dispositivo,
+    ctl_ConsultaTodosCatalogosBusqueda
     
 }
