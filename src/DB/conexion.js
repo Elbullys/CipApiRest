@@ -1,18 +1,14 @@
 const { getConnection } = require("./db");
 const config = require("../config");
 
-//*COMPONENTES
-//CONSULTA
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+    /*COMPONENTES*/
+    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 async function consulta_componente(tabla) {
   let connection;
   try {
     connection = await getConnection(); // Obtener conexión del pool
 
-    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-    /*COMPONENTES*/
-    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-    /** CONSULTAS */
-    // Realizar la consulta
     const [result] = await connection.query(`
       SELECT U.id_unidad, U.nombre_unidad, D.tipo_equipo, M.marca, M.modelo,
              C.numero_serie, C.codigo_TI, CT.num_contrato_actual, C.operacion
@@ -172,7 +168,7 @@ async function consulta_conteo_componentes_TipoUnidad(tabla) {
 GROUP BY
     A.tipo_unidad 
     ORDER BY
-            Total_Componentes DESC; -- Opcional: ordenar por cantidad
+            Total_Componentes DESC; 
     `);
 
     return result; // Retorna el resultado de la consulta
@@ -572,12 +568,101 @@ async function consulta_ResponsablePorUnidad(tabla, searchTerm, idUnidad) {
   try {
     connection = await getConnection(); // Obtener conexión del pool
     const [result] = await connection.query(`
-      SELECT R.id_responsable ,R.nombre_responsable,R.cargo,U.nombre_unidad ,A.Area
+      SELECT R.id_responsable ,R.nombre_responsable,R.login,R.cargo,U.nombre_unidad,R.estado_responsable,R.FK_idunidad,R.FK_id_area ,A.area
       FROM ${tabla} R JOIN unidad U ON U.id_unidad=R.FK_idunidad JOIN area AS A ON A.id_area=R.FK_id_area 
       WHERE  R.FK_idunidad = ? AND R.nombre_responsable LIKE ?  AND R.estado_responsable = 'ACTIVO' 
     `, [idUnidad, '%' + searchTerm + '%']);
 
     return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+async function consulta_Por_ResponsableGlobalPorUnidad(tabla, searchTerm, idUnidad) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      SELECT R.id_responsable ,R.nombre_responsable,R.login,R.cargo,U.nombre_unidad,R.estado_responsable,R.FK_idunidad,R.FK_id_area ,A.area
+      FROM ${tabla} R JOIN unidad U ON U.id_unidad=R.FK_idunidad JOIN area AS A ON A.id_area=R.FK_id_area 
+      WHERE  R.FK_idunidad = ? AND R.nombre_responsable LIKE ?
+    `, [idUnidad, '%' + searchTerm + '%']);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+async function consulta_consultaResponsablesGlobalPorUnidad(tabla, idUnidad) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      SELECT R.id_responsable ,R.nombre_responsable,R.login,R.cargo,U.nombre_unidad,R.estado_responsable,R.FK_idunidad,R.FK_id_area ,A.area
+      FROM ?? R JOIN unidad U ON U.id_unidad=R.FK_idunidad JOIN area AS A ON A.id_area=R.FK_id_area 
+      WHERE  R.FK_idunidad = ? 
+    `, [tabla,idUnidad]);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+async function consulta_ResponsablePorIdResponsable(tabla, idResponsable) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      SELECT R.id_responsable ,R.nombre_responsable,R.login,R.cargo,U.nombre_unidad,U.tipo_unidad,R.estado_responsable,R.FK_idunidad,R.FK_id_area ,A.area
+      FROM ?? R JOIN unidad U ON U.id_unidad=R.FK_idunidad JOIN area AS A ON A.id_area=R.FK_id_area 
+      
+      WHERE  R.id_responsable = ? 
+    `, [tabla, idResponsable]);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+async function Verificar_Duplicidad_usuario_responsable(tabla, username,IDUnidad) {
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    // Cambiar a SELECT completo para recuperar los datos (incluyendo el hash de la contraseña)
+    const [result] = await connection.query(
+      `SELECT nombre_responsable,password,PasswordWeb,cargo,login,id_responsable,estado_responsable FROM ?? WHERE login = ? AND FK_idunidad= ? `,
+      [tabla, username,IDUnidad]
+    );
+    // Si hay resultados, devolver el primer registro (objeto con los datos)
+    if (result.length > 0) {
+
+      return true;  // Devuelve el objeto completo del usuario (ej: { id_tecnico: 1, usuario: 'ejemplo', password: 'hash...' })
+    } else {
+      return false;  // Usuario no existe
+    }
   } catch (error) {
     console.error("[db error]", error);
     throw error; // Lanza el error para manejarlo más arriba
@@ -595,13 +680,92 @@ async function ConsultaTodosResponsablePorIDUnidad(tabla, idUnidad) {
     connection = await getConnection(); // Obtener conexión del pool
 
     const [result] = await connection.query(`
-      SELECT R.id_responsable ,R.nombre_responsable,R.cargo,A.Area 
+      SELECT R.id_responsable ,R.nombre_responsable,R.login,R.cargo,U.nombre_unidad,R.estado_responsable,R.FK_idunidad,R.FK_id_area,A.area 
       FROM ${tabla} R JOIN unidad U ON U.id_unidad=R.FK_idunidad  JOIN area AS A ON A.id_area=R.FK_id_area 
       WHERE R.FK_idunidad = ? AND R.estado_responsable = 'ACTIVO'
     `, [idUnidad]);
 
     return result; // Retorna el resultado de la consulta
   } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+//INSERT
+async function agregarResponsable(tabla, Data, hashedPassword, passwordCIP) {
+  let connection;
+
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`INSERT INTO ?? (nombre_responsable, login, password, PasswordWeb,cargo,estado_responsable,FK_idunidad,FK_id_area) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [tabla, Data.nombre_responsable, Data.login, passwordCIP, hashedPassword, Data.cargo, Data.estado_responsable, Data.FK_idunidad, Data.FK_id_area]);
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+async function EditarResponsablePorIDConPassword(tabla, id_responsable, dataResponsable, hashedPassword, passwordCIP) {
+  let connection;
+  console.log("data en bd", dataResponsable);
+  try {
+    const {
+      nombre_responsable, login, password, cargo, estado_responsable, FK_idunidad, FK_id_area
+
+    } = dataResponsable;
+
+
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      UPDATE ??
+      SET nombre_responsable= ?,login= ?,password = ?,PasswordWeb = ?, cargo = ?,
+      estado_responsable = ?,FK_idunidad = ?,FK_id_area = ?
+      WHERE id_responsable = ?
+    `, [tabla,nombre_responsable, login, passwordCIP, hashedPassword, cargo, estado_responsable, FK_idunidad, FK_id_area, id_responsable]);
+    return { result, login }; // Retorna el resultado de la consulta
+  }
+
+  catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+async function EditarResponsablePorIDSinPassword(tabla, id_responsable, dataResponsable) {
+  let connection;
+  console.log("data en bd", dataResponsable);
+  try {
+    const {
+      nombre_responsable, login, cargo, estado_responsable, FK_idunidad, FK_id_area
+
+    } = dataResponsable;
+
+
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      UPDATE ??
+      SET nombre_responsable= ?,login= ?, cargo = ?,
+      estado_responsable = ?,FK_idunidad = ?,FK_id_area = ?
+      WHERE id_responsable = ?
+    `, [tabla,nombre_responsable, login, cargo, estado_responsable, FK_idunidad, FK_id_area, id_responsable]);
+    return { result, login }; // Retorna el resultado de la consulta
+  }
+
+  catch (error) {
     console.error("[db error]", error);
     throw error; // Lanza el error para manejarlo más arriba
   } finally {
@@ -650,6 +814,35 @@ async function consulta_Por_Dispositivo_Busqueda(tabla, searchTerm) {
       FROM ${tabla} D 
       WHERE  status_dispositivos = 'ACTIVO' AND tipo_equipo LIKE ? ORDER BY tipo_equipo ASC
     `, ['%' + searchTerm + '%']);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//*MARCA/MODELO*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+async function consulta_Por_MarcaModelo_BusquedaPorDispositivo(tabla, searchTerm,FK_dispositivo) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      SELECT id_marca,marca,modelo,FK_id_dispositivo,D.tipo_equipo 
+      FROM ?? M 
+      INNER JOIN dispositivos D ON D.id_dispositivo=M.FK_id_dispositivo
+      WHERE M.FK_id_dispositivo = ? 
+       AND (M.marca LIKE ? OR M.modelo LIKE ? ) ORDER BY tipo_equipo ASC
+    `, [tabla,FK_dispositivo,'%' + searchTerm + '%','%' + searchTerm + '%']);
 
     return result; // Retorna el resultado de la consulta
   } catch (error) {
@@ -729,7 +922,40 @@ async function consulta_Todos_Catalogos_Por_Dispositivo(tabla, IdDispositivo) {
     }
   }
 }
+//ConsultaCatalogoPorID
+async function ConsultaCatalogoPorID(tabla,Id_catalogo_componente ){
 
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      select CC.id_catalogo_componente, CC.nombre_catalogo,CC.descripcion_modelo,D.tipo_equipo,D.CaracteristicasAdicionales,
+      CC.FK_id_dispositivo, CC.FK_id_marca_cata,CC.FK_catalogo_caracteristicas,CCC.ProcesadorID,CCC.MemoriaRamID,
+      CCC.DiscoDuroID,CCC.SistemaOperativoID,
+       M.marca, M.modelo,CONCAT( CP.Fabricante,' ',CP.serie,' ',CP.modelo) AS 'Procesador',
+       CONCAT (CMR.CapacidadGB,' ',CMR.Tipo) AS 'Memoria Ram',CONCAT(CDD.Tipo,' ',CDD.Capacidad_GB)
+        AS 'Disco Duro', CONCAT (CSO.Nombre,' ',CSO.VersIon_SO,' ',CSO.Arquitectura) AS 'Sistema Operativo'
+         FROM ?? AS CC JOIN dispositivos AS D ON CC.FK_id_dispositivo=D.id_dispositivo  JOIN marca AS M 
+         ON CC.FK_id_marca_cata=M.id_marca JOIN catalogo_componente_caracteristicas AS CCC 
+         ON CCC.id_catalogo_caract=CC.FK_catalogo_caracteristicas JOIN Cat_sistema_operativo 
+         AS CSO ON CSO.IdSistemaOperativo=CCC.SistemaOperativoID JOIN Cat_procesador AS CP 
+         ON CP.IdProcesador=CCC.ProcesadorID JOIN Cat_memoria_ram AS CMR ON 
+         CMR.IdMemoriaRam=CCC.MemoriaRamID JOIN Cat_disco_duro AS CDD ON CDD.IdDiscoDuro=CCC.DiscoDuroID
+          WHERE CC.id_catalogo_componente= ?
+          ORDER BY CC.nombre_catalogo ASC
+    `, [tabla, Id_catalogo_componente ]);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
 //PERMITE REALIZAR EL MUESTREO DE TODOS LOS CATALOGOS EXISTENTES CON BUSQUEDA
 async function ConsultaTodosCatalogosBusqueda(tabla, searchTerm) {
 
@@ -738,7 +964,7 @@ async function ConsultaTodosCatalogosBusqueda(tabla, searchTerm) {
     connection = await getConnection(); // Obtener conexión del pool
 
     const [result] = await connection.query(`
-      select CC.id_catalogo_componente, CC.nombre_catalogo,CC.descripcion_modelo, D.tipo_equipo,
+      select CC.id_catalogo_componente, CC.nombre_catalogo,CC.descripcion_modelo,D.tipo_equipo,CC.FK_catalogo_caracteristicas, D.tipo_equipo,
        M.marca, M.modelo,CONCAT( CP.Fabricante,' ',CP.serie,' ',CP.modelo) AS 'Procesador',
        CONCAT (CMR.CapacidadGB,' ',CMR.Tipo) AS 'Memoria Ram',CONCAT(CDD.Tipo,' ',CDD.Capacidad_GB)
         AS 'Disco Duro', CONCAT (CSO.Nombre,' ',CSO.VersIon_SO,' ',CSO.Arquitectura) AS 'Sistema Operativo'
@@ -748,9 +974,185 @@ async function ConsultaTodosCatalogosBusqueda(tabla, searchTerm) {
          AS CSO ON CSO.IdSistemaOperativo=CCC.SistemaOperativoID JOIN Cat_procesador AS CP 
          ON CP.IdProcesador=CCC.ProcesadorID JOIN Cat_memoria_ram AS CMR ON 
          CMR.IdMemoriaRam=CCC.MemoriaRamID JOIN Cat_disco_duro AS CDD ON CDD.IdDiscoDuro=CCC.DiscoDuroID
-          WHERE (CC.nombre_catalogo LIKE ? OR M.marca LIKE ? OR M.modelo LIKE ?)
+          WHERE (D.tipo_equipo LIKE ? OR CC.nombre_catalogo LIKE ? OR M.marca LIKE ? OR M.modelo LIKE ?)
           ORDER BY CC.nombre_catalogo ASC
-    `, ['%' + searchTerm + '%', '%' + searchTerm + '%', '%' + searchTerm + '%']);
+    `, ['%' + searchTerm + '%','%' + searchTerm + '%', '%' + searchTerm + '%', '%' + searchTerm + '%']);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+//INSERT
+async function InsertaryVerificarCatalogoComponente( Data) {
+  let connection;
+
+  const { nombre_catalogo, descripcion_modelo, FK_id_dispositivo,
+     nombre_marca,nombre_modelo, id_procesador,id_memoriaram,
+     id_discoduro,FK_id_marca_cata,id_sistema_operativo,
+     CaracteristicasAdicionales,BanderaAutorizacionInsercion,
+     } = Data;
+
+  try {
+     connection = await getConnection(); // Obtener conexión del pool
+    await connection.query(`CALL SP_INSERTAR_Y_VERIFICAR_CATALOGO
+      (? ,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?,@resultado,@existeMarcaModelo,@Id_Catalogo_Insert )
+    `, [nombre_catalogo, descripcion_modelo, FK_id_dispositivo,
+      nombre_marca,nombre_modelo, id_procesador,id_memoriaram,
+      id_discoduro,FK_id_marca_cata,id_sistema_operativo,
+      CaracteristicasAdicionales,BanderaAutorizacionInsercion],
+    );
+    // Obtener los valores OUT con una SELECT
+    const [rows] = await connection.query(
+      'SELECT @resultado AS resultado, @existeMarcaModelo AS existeMarcaModelo , @Id_Catalogo_Insert AS Id_Catalogo_Insert'
+    );
+
+    // Retornar los resultados
+    return {
+      resultado: rows[0].resultado,  // 1 o 0
+      existeMarcaModelo: rows[0].existeMarcaModelo,  // 1 o 0
+      Id_Catalogo_Insert: rows[0].Id_Catalogo_Insert  //ID CATALOGO COMPONENTES CREADO
+    };
+    
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+//UPDATE 
+
+async function EditarCatalogoComponentesPorId(tabla, dataCatalogoComponente, id_catalogo_componente) {
+  let connection;
+  
+  try {
+    const {
+      nombre_catalogo, descripcion_modelo, FK_id_dispositivo , FK_id_marca_cata , FK_catalogo_caracteristicas
+
+    } = dataCatalogoComponente;
+
+
+    connection = await getConnection(); // Obtener conexión del pool
+    const [result] = await connection.query(`
+      UPDATE ??
+      SET nombre_catalogo= ?,descripcion_modelo = ?,FK_id_dispositivo = ?, FK_id_marca_cata = ?, FK_catalogo_caracteristicas = ?
+      WHERE id_catalogo_componente = ?
+    `, [tabla,nombre_catalogo, descripcion_modelo, FK_id_dispositivo , FK_id_marca_cata , FK_catalogo_caracteristicas, id_catalogo_componente]);
+    return { result, id_catalogo_componente }; // Retorna el resultado de la consulta
+  }
+
+  catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//*Procesador*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+async function consulta_Todos_Procesador_busqueda(tabla, searchTerm) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      select IdProcesador,Fabricante,serie,modelo from  ?? 
+          WHERE (Fabricante LIKE ? OR serie LIKE ? OR modelo LIKE ?)
+          ORDER BY Fabricante ASC,serie ASC
+    `, [tabla,'%' + searchTerm + '%','%' + searchTerm + '%', '%' + searchTerm + '%']);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//*MEMORIA RAM*/
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+async function consulta_Todos_MemoriaRam_busqueda(tabla, searchTerm) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      select IdMemoriaRam ,CapacidadGB,Tipo from  ?? 
+          WHERE (CapacidadGB LIKE ? OR Tipo LIKE ?)
+          ORDER BY Tipo ASC
+    `, [tabla,'%' + searchTerm + '%', '%' + searchTerm + '%']);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//*ALMACENAMIENTO (DISCO DURO)*/ consulta_Todos_SistemaOperativo_busqueda
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+async function consulta_Todos_DiscoDuro_busqueda(tabla, searchTerm) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      select IdDiscoDuro,Tipo,Capacidad_GB from  ?? 
+          WHERE (Tipo LIKE ? OR Capacidad_GB LIKE ?)
+          ORDER BY Tipo ASC
+    `, [tabla,'%' + searchTerm + '%', '%' + searchTerm + '%']);
+
+    return result; // Retorna el resultado de la consulta
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+//*SISTEMA OPERATIVO*/ 
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+async function consulta_Todos_SistemaOperativo_busqueda(tabla, searchTerm) {
+
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+
+    const [result] = await connection.query(`
+      select IdSistemaOperativo ,Nombre,VersIon_SO,Arquitectura from  ?? 
+          WHERE (Nombre LIKE ? OR VersIon_SO LIKE ? OR Arquitectura LIKE ?)
+          ORDER BY Nombre  ASC
+    `, [tabla,'%' + searchTerm + '%', '%' + searchTerm + '%','%' + searchTerm + '%']);
 
     return result; // Retorna el resultado de la consulta
   } catch (error) {
@@ -1269,16 +1671,48 @@ module.exports = {
   consulta_Todas_Areas_Por_TipoUnidad,
 
   //*RESPONSABLES
+  //consults
   consulta_ResponsablePorUnidad,
+  consulta_Por_ResponsableGlobalPorUnidad,
+  consulta_consultaResponsablesGlobalPorUnidad,
   ConsultaTodosResponsablePorIDUnidad,
+Verificar_Duplicidad_usuario_responsable,
+consulta_ResponsablePorIdResponsable,
+//insert
+agregarResponsable,
+//update
+EditarResponsablePorIDSinPassword,
+EditarResponsablePorIDConPassword,
+  
   //*DISPOSITIVOS
   consulta_TODOS_dispositivos,
   consulta_Por_Dispositivo_Busqueda,
 
+  //*MARCA/MODELO
+  consulta_Por_MarcaModelo_BusquedaPorDispositivo,
+
+
+  //*PROCESADOR //consulta_Todos_DiscoDuro_busqueda
+  consulta_Todos_Procesador_busqueda,
+
+    //*MEMORIA RAM 
+  consulta_Todos_MemoriaRam_busqueda,
+
+ //*ALMACENAMIENTO (DISCO DURO) 
+  consulta_Todos_DiscoDuro_busqueda,
+   //*SISTEMA OPERATIVO
+  consulta_Todos_SistemaOperativo_busqueda,
   //*CATALOGO COMPONENTES
+  //CONSULTA
   consulta_Catalogos_Por_Dispositivo_Busqueda,
   consulta_Todos_Catalogos_Por_Dispositivo,
   ConsultaTodosCatalogosBusqueda,
+  ConsultaCatalogoPorID,
+  //INSERT
+  InsertaryVerificarCatalogoComponente,
+
+  //UPDATE
+  EditarCatalogoComponentesPorId,
 
   //*FACTURAS
   consulta_Todas_Facturas,

@@ -5,7 +5,9 @@ const controlador = require("./controladorTecnicos"); // Importamos el controlad
 const jwt = require("jsonwebtoken");
 
 
-
+/****************************************************************************************************** */
+//CONSULTS
+/****************************************************************************************************** */
 //*GET
 router.get("/consultatecnicos", async function (req, res, next) {
 
@@ -36,6 +38,9 @@ router.get("/consultarportecnico", async function (req, res, next) {
   }
 });
 
+/****************************************************************************************************** */
+//Insert
+/****************************************************************************************************** */
 //*POST TECNICOS
 router.post("/AgregarTecnico", async function (req, res, next) {
   const tecnicoData = req.body; // Asegúrate de que estás enviando el cuerpo correctamente

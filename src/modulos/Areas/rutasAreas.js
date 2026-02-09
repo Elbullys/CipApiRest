@@ -7,7 +7,7 @@ const controlador = require("./controladorAreas"); // Importamos el controlador
 
 // Ruta para obtener todos los items
 router.get("/ConsultaAreaPorTipoUnidad", async function (req, res,next) {
-  
+  console.log("Entrando a la ruta de consulta de área por tipo unidad", req.query);
    const TipoUnidad = req.query.TipoUnidad; // Obtenemos tipo unidad desde la consulta
   const searchTerm = req.query.searchTerm; // Obtenemos el area a buscar desde la consulta
   try {

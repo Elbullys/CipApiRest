@@ -12,6 +12,11 @@ const componentes = require('./modulos/componentes/rutasComponentes');
 const unidades = require('./modulos/unidades/rutasUnidades');
 const areas = require('./modulos/Areas/rutasAreas');
 const dispositivos = require('./modulos/Dispositivos/rutasDispositivos');
+const MarcaModelo = require('./modulos/Marca_Modelo/rutasMarcaModelo');
+const procesador= require('./modulos/Procesador/rutasProcesador');
+const MemoriaRam= require('./modulos/Memoria_Ram/rutasMemoriaRam');
+const Almacenamiento= require('./modulos/Almacenamiento/rutasAlmacenamiento');
+const SistemaOperativo= require('./modulos/Sistema_operativo/rutasSistemaOperativo');
 const catalogos_componentes = require('./modulos/Catalogos/rutasCatalogosComponentes');
 const facturas = require('./modulos/Facturas/rutasFacturas');
 const tecnicos = require('./modulos/Tecnicos/rutasTecnicos');
@@ -60,17 +65,22 @@ app.set('port', config.app.port);
 
 // RUTAS
 app.use('/api/componentes',requireAuth, componentes);
-app.use('/api/unidades', requireAuth, unidades);
-app.use('/api/areas', requireAuth, areas);
+app.use('/api/unidades',requireAuth, unidades);
+app.use('/api/areas', requireAuth,areas);
 app.use('/api/dispositivos', requireAuth, dispositivos);
-app.use('/api/CatalogosComponentes', catalogos_componentes);
-app.use('/api/facturas', facturas);
+app.use('/api/MarcaModelo', requireAuth, MarcaModelo);
+app.use('/api/CatalogosComponentes',requireAuth, catalogos_componentes);
+app.use('/api/procesador',requireAuth, procesador);
+app.use('/api/MemoriaRam',requireAuth, MemoriaRam);
+app.use('/api/Almacenamiento', Almacenamiento);
+app.use('/api/SistemaOperativo',requireAuth, SistemaOperativo);
+app.use('/api/facturas',requireAuth, facturas);
 app.use('/api/tecnicos',requireAuth, tecnicos);
 app.use('/api/logintecnicos', logintecnico);
 app.use('/api/movComponentes',requireAuth, MovComponentes);
-app.use('/api/responsables', responsables);
+app.use('/api/responsables', requireAuth,responsables);
 app.use('/api/reportes',requireAuth, reporteDashboard);
-app.use('/api/inventarios', inventarios);
+app.use('/api/inventarios', requireAuth,inventarios);
 
 
 app.use(error);
