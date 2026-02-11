@@ -33,7 +33,9 @@ const inventarios = require('./modulos/Inventarios/RutasInventario');
 // Configuración de CORS
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://controiinventariodeveloper.onrender.com"  // Asegúrate de que este sea tu dominio exacto de frontend
+  "https://controiinventariodeveloper.onrender.com",  //frontend
+  "https://appcip.onrender.com/"
+  
 ];
 
 const corsOptions = {
