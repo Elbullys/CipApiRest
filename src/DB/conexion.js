@@ -209,7 +209,7 @@ async function InventarioComponentesPorColectivo(BusquedaEncabezados) {
 
   const { id_unidad, IdResponsable, id_area, id_dispositivo, id_catalogo_componente, status_componente }
     = BusquedaEncabezados;
-  console.log("BusquedaEncabezados en bd:", BusquedaEncabezados);
+
   let connection;
   try {
     connection = await getConnection(); // Obtener conexión del pool
@@ -434,6 +434,7 @@ async function actualizarComponentesColectivo(tabla, componentes) {
     // Para batch updates, usa un loop (cada UPDATE es individual)
     const results = [];
     for (const comp of componentes) {
+       console.log("Actualizando componente:", comp.serie, "FK_Factura:", comp.FK_Factura);  // Agrega esto
       const [result] = await connection.query(`
         UPDATE ??
         SET 
@@ -442,7 +443,8 @@ async function actualizarComponentesColectivo(tabla, componentes) {
             FK_id_responsable = ?,
             FK_id_unidad = ?,
             FK_id_catalogo_componentes = ?,
-            FK_id_area = ?
+            FK_id_area = ?,
+            FK_Factura = ? 
         WHERE numero_serie = ? 
       `, [
         tabla,
@@ -452,6 +454,7 @@ async function actualizarComponentesColectivo(tabla, componentes) {
         comp.id_unidad,
         comp.id_catalogo_componentes,
         comp.id_area,
+        comp.FK_Factura ,
         comp.serie  // WHERE por serie
       ]);
       results.push(result);
@@ -1177,7 +1180,7 @@ async function consulta_Todas_Facturas(tabla) {
     connection = await getConnection(); // Obtener conexión del pool
 
     const [result] = await connection.query(`
-      SELECT *  FROM ${tabla} ORDER BY IdFactura DESC `);
+      SELECT IdFactura,NumeroFactura,NombreProveedor,LugarCompra,FechaFactura,Observacion FROM ${tabla} ORDER BY IdFactura ASC `);
 
     return result; // Retorna el resultado de la consulta
   } catch (error) {
@@ -1519,7 +1522,8 @@ async function AgregarMovimientoColectivoComponenteArray(tablaMovimientos, tabla
                     status_componente = ?, 
                     observaciones = ?,
                     FK_id_catalogo_componentes = ?,
-                    FK_id_responsable = ?
+                    FK_id_responsable = ?,
+                    FK_Factura = ?
                 WHERE id_componente = ?`;
 
             const paramsUpdate = [
@@ -1530,6 +1534,7 @@ async function AgregarMovimientoColectivoComponenteArray(tablaMovimientos, tabla
                 itemNuevo.observacion,
                 itemNuevo.id_catalogo_componentes,
                 itemNuevo.id_responsable, 
+                itemNuevo.FK_Factura,
                 anterior.id_componente
             ];
 
