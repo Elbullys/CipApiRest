@@ -160,6 +160,20 @@ console.log("componentes",data);
   }
 });
 
+/****************************************************************************************************** */
+//INSERT
+/****************************************************************************************************** */
+router.post("/AgregarNuevoComponente", async function (req, res, next) {
+  try {
+    const Data = req.body; 
+    const items = await controlador.ctl_Agregar_Componente(Data);
+   
+      return res.status(201).json(items);
+
+  } catch (err) {
+    next(err);
+  }
+});
 
 
 //ctl_Editar_ComponentePorID

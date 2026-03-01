@@ -36,7 +36,7 @@ async function ctl_agregar_tecnico(tecnicoData) {
     else {
         tecnicoData.IsAdmin = varAdmin;
         const esDuplicado = await db.Verificar_Duplicidad_usuario_tecnico(TABLA, tecnicoData.usuario);
-        console.log("esDuplicado", esDuplicado);
+        
         if (esDuplicado) {
             return { icon: "warning", error: true, message: "Usuario Registrado", tittle: "Advertencia" }; // Enviar respuesta de error
         } else {

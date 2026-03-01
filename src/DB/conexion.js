@@ -471,6 +471,45 @@ async function actualizarComponentesColectivo(tabla, componentes) {
   }
 }
 
+//INSERT
+async function InsertaryVerificarComponentes(Data,abreviatura_EQ) {
+  let connection;
+ 
+  const { FK_id_unidad, operacion, estado_equipo,
+     Abreviatura_Estado,FK_Factura, FK_id_responsable,FK_id_area,
+     FK_id_dispositivo,abreviatura_tipo,FK_id_catalogo_componentes,
+     numero_serie,observaciones,status_componente,status_inventario,
+     EsClienteServidor,FK_IdTecnico,FechaCompra,GenerarNumeroserie
+     } = Data;
+
+  try {
+     connection = await getConnection(); // Obtener conexión del pool
+    await connection.query(`CALL SP_AGREGAR_COMPONENTE_CON_CONSECUTIVO
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,@p_codigoTI,@p_id_insertado,@resultado )
+    `, [FK_id_unidad, operacion, estado_equipo,
+      Abreviatura_Estado,FK_Factura, FK_id_responsable,FK_id_area,
+      FK_id_dispositivo,abreviatura_tipo,FK_id_catalogo_componentes,
+      numero_serie,observaciones,status_componente,status_inventario,EsClienteServidor,
+    FK_IdTecnico,FechaCompra,abreviatura_EQ,GenerarNumeroserie],
+    );
+    // Obtener los valores OUT con una SELECT
+    const [outResult] = await connection.query(
+      'SELECT @p_codigoTI AS codigoTI, @p_id_insertado AS id_insertado, @resultado AS resultado'
+    );
+
+    // Retornar los resultados
+        return[outResult];
+   
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
+
 
 
 
@@ -494,7 +533,7 @@ async function consulta_Por_Unidad(tabla, databusqueda) {
       ORDER BY id_unidad ASC
     `, [databusqueda, '%' + databusqueda + '%']);
 
-    console.log("result", result);
+
     return result; // Retorna el resultado de la consulta
 
   } catch (error) {
@@ -1667,6 +1706,8 @@ module.exports = {
   EditarComponenteFactura,
   EditarComponentePorID,
   actualizarComponentesColectivo,
+  //INSERT
+  InsertaryVerificarComponentes,
 
 
   //*UNIDADES

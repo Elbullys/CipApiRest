@@ -97,7 +97,7 @@ async function ctl_consulta_ResponsablePorIdResponsable(id_responsable){
 //INSERT
 /****************************************************************************************************** */
 async function ctl_agregar_responsable(responsableData) {
-    console.log("Datos recibidos en el controlador para agregar responsable:", responsableData);
+    
     const validarusername = Utils.Validar_datos.username(responsableData.login);
     const validarpassword = Utils.Validar_datos.password(responsableData.password);
     const validarnombre = Utils.Validar_datos.validar_Campos_String(responsableData.nombre_responsable, "El nombre");
