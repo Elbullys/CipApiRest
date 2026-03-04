@@ -485,7 +485,7 @@ async function InsertaryVerificarComponentes(Data,abreviatura_EQ) {
   try {
      connection = await getConnection(); // Obtener conexión del pool
     await connection.query(`CALL SP_AGREGAR_COMPONENTE_CON_CONSECUTIVO
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,@p_codigoTI,@p_id_insertado,@resultado )
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,@p_codigoTI,@p_id_insertado,@resultado,@return_numero_serie)
     `, [FK_id_unidad, operacion, estado_equipo,
       Abreviatura_Estado,FK_Factura, FK_id_responsable,FK_id_area,
       FK_id_dispositivo,abreviatura_tipo,FK_id_catalogo_componentes,
@@ -494,11 +494,13 @@ async function InsertaryVerificarComponentes(Data,abreviatura_EQ) {
     );
     // Obtener los valores OUT con una SELECT
     const [outResult] = await connection.query(
-      'SELECT @p_codigoTI AS codigoTI, @p_id_insertado AS id_insertado, @resultado AS resultado'
+      'SELECT @p_codigoTI AS codigoTI, @p_id_insertado AS id_insertado, @resultado AS resultado, @return_numero_serie AS numero_serie'
     );
 
     // Retornar los resultados
+
         return[outResult];
+       
    
   } catch (error) {
     console.error("[db error]", error);

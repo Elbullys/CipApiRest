@@ -556,10 +556,11 @@ const respuesta = sets[0];
     const codigoTI = respuesta.codigoTI;
     const idInsertado = respuesta.id_insertado;
     const resultado = respuesta.resultado;
+    const numero_serie = respuesta.numero_serie;
  
 
      if (resultado === 1) {
-        return { icon: "success", error: false,tittle: "¡Éxito!", message: `Activo registrado correctamente. Código de Control TI asignado: ${codigoTI}.`, body: codigoTI, idInsertado };
+        return { icon: "success", error: false,tittle: "¡Éxito!", message: `Activo registrado correctamente. Código de Control TI asignado: ${codigoTI}.`, body: codigoTI, idInsertado,numero_serie };
 
     } else if (resultado === 2) {
         
