@@ -23,6 +23,20 @@ router.get("/consultatecnicos", async function (req, res, next) {
     next(err);
   }
 });
+router.get("/consultatecnicosActivos", async function (req, res, next) {
+
+
+  const searchTerm = req.query.searchTerm; // Obtenemos el area a buscar desde la consulta
+  
+  try {
+
+    const items = await controlador.ctl_Consulta_Todos_Tecnicos_Activos(searchTerm);
+    respuesta.success(req, res, items, 200);
+    // Llamamos al método todos del controlador
+  } catch (err) {
+    next(err);
+  }
+});
 router.get("/consultarportecnico", async function (req, res, next) {
 
 

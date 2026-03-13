@@ -166,6 +166,11 @@ async function ctl_consultaComponentesColectivoArray(componentes) {
   }
 }
 
+function ctl_consulta_Todos_Componentes_Busqueda(databusqueda) {
+
+  return db.consulta_Todos_Componentes_Busqueda(TABLA, databusqueda);
+}
+
 /**/ /////////////////////////////////////////////////////////////////////////////////////////////////// */
 //UPDATE
 /**/ /////////////////////////////////////////////////////////////////////////////////////////////////// */
@@ -596,6 +601,7 @@ module.exports = {
   ctl_InventarioComponentesPorColectivo,
   ctl_verificarnumeroserieComponenteExistenciaDuplicadoArray,
   ctl_consultaComponentesColectivoArray,
+  ctl_consulta_Todos_Componentes_Busqueda,
 
   //UPDATE
   ctl_Editar_ComponenteFactura,

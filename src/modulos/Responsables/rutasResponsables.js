@@ -40,7 +40,7 @@ router.get("/ConsultaTodosResponsablePorIDUnidad", async function (req, res,next
   
    const id_unidad = req.query.id_unidad; // Obtenemos id unidad desde la consulta
 
-
+console.log("ID UNIDAD RECIBIDA EN LA RUTA:", id_unidad); // Verificar que el ID se recibe correctamente
   try {
     const items = await controlador.ctl_ConsultaTodosResponsablePorIDUnidad(id_unidad);
     respuesta.success(req, res, items, 200);

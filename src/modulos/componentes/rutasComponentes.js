@@ -96,20 +96,28 @@ router.post('/Inventario/verificarnumeroserieComponenteExistenciaDuplicadoArray'
     respuesta.success(req, res, items, 200);
   }
 });
-//ACTUALIZAR COMPONENTES COLECTIVO
-router.post('/Inventario/actualizarComponentesColectivo', async (req, res) => {
-  const { componentes } = req.body;
-  const itemsAnteriores = await controlador.ctl_actualizarComponentesColectivo(componentes);
+//CONSULTA TODAS LAS COINCIDENCIAS DE LOS COMPONENTES 
+router.get('/consulta_Todos_Componentes_Busqueda', async (req, res, next) => {
+  const searchTerm = req.query.searchTerm;
 
-  const itemsActualizados = await controlador.ctl_actualizarComponentesColectivo(componentes);
-  if (itemsActualizados.error) {
-    console.log('Error en actualización:', itemsActualizados.message);
-    respuesta.error(req, res, itemsActualizados.message, 400);
-  } else {
-    respuesta.success(req, res, { message: `${itemsActualizados.updatedCount} componentes actualizados.` }, 200);
+  try {
+  const items = await controlador.ctl_consulta_Todos_Componentes_Busqueda(searchTerm);
+    respuesta.success(req, res, items, 200);
+  } catch (err) {
+    next(err);
   }
 });
 
+// Ruta para obtener todos los items
+router.get("/ConsultaComponentes", async function (req, res, next) {
+  try {
+    const items = await controlador.consulta_componente();
+    respuesta.success(req, res, items, 200);
+    // Llamamos al método todos del controlador
+  } catch (err) {
+    next(err);
+  }
+});
 
 
 /****************************************************************************************************** */

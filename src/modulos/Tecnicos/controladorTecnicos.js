@@ -61,6 +61,11 @@ async function ctl_Consulta_Todos_Tecnicos(searchTerm) {
     return db.Consulta_Todos_Tecnicos(TABLA, searchTerm);
 
 }
+async function ctl_Consulta_Todos_Tecnicos_Activos(searchTerm) {
+
+    return db.Consulta_Todos_Tecnicos_Activos(TABLA, searchTerm);
+
+}
 
 async function ctl_Consulta_Por_Tecnico(id_tecnico) {
 
@@ -158,6 +163,7 @@ module.exports = {
     //*consultas */
     ctl_Consulta_Todos_Tecnicos,
     ctl_Consulta_Por_Tecnico,
+    ctl_Consulta_Todos_Tecnicos_Activos,
     //*UPDATE
     ctl_EditartecnicoPorIDConPassword,
     ctl_EditartecnicoPorIDSinPassword,

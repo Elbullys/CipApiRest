@@ -25,13 +25,13 @@ router.post("/logintecnico", async function (req, res, next) {
 
 
     //CREACION del token JWT AUTETICACION 
-    const token = jwt.sign(payload, process.env.SECRET_JWT_KEY, { expiresIn: '1h' })
+    const token = jwt.sign(payload, process.env.SECRET_JWT_KEY, { expiresIn: '8h' })
     res.
       cookie('access_token', token, {
         httpOnly: process.env.SECURE_COOKIE, // El token no será accesible desde JavaScript del lado del cliente
         secure:  process.env.NODE_ENV,  // true en producción (HTTPS)
         sameSite: "None",//Strict // Asegura que la cookie solo se envíe en solicitudes del mismo sitio
-        maxAge: 1000 * 60 * 60 // 1 hora en milisegundos
+        maxAge: 1000 * 60 * 60 * 8 // 8 horas en milisegundos
         //domain:'apirestcip.onrender.com',// config.domain ||, // Ajusta el dominio según sea necesario
       })
 

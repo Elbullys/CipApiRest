@@ -32,6 +32,60 @@ async function consulta_componente(tabla) {
     }
   }
 }
+async function consulta_Todos_Componentes_Busqueda(tabla, databusqueda) {
+  let connection;
+  try {
+    connection = await getConnection();
+
+    // Campos a buscar 
+    const camposBusqueda = [
+      'C.codigo_TI',
+      'C.numero_serie',
+      'M.marca',
+      'M.modelo',
+      'D.tipo_equipo',
+      'R.nombre_responsable',
+      'U.nombre_unidad',
+      'A.area',
+      'CF.NumeroFactura',
+      'CF.NombreProveedor',
+      'C.observaciones'
+    ];
+
+    // Construir WHERE dinámicamente
+    const whereClause = camposBusqueda.map(campo => `${campo} LIKE ?`).join(' OR ');
+
+    const [result] = await connection.query(`
+      SELECT C.id_componente,U.id_unidad, R.nombre_responsable, U.nombre_unidad, A.area, C.operacion,
+             D.tipo_equipo, M.marca, M.modelo,CC.nombre_catalogo ,C.numero_serie, C.codigo_TI, C.observaciones,
+             C.status_componente, C.status_inventario, CT.num_contrato_actual, T.nombre,
+             C.FechaRegistro, C.EsClienteServidor, C.FechaCompra, CF.NumeroFactura,
+             CF.NombreProveedor, CF.LugarCompra, CF.FechaFactura, C.id_componente
+      FROM ${tabla} C
+      INNER JOIN unidad U ON U.id_unidad = C.FK_id_unidad
+      INNER JOIN responsable R ON R.id_responsable = C.FK_id_responsable
+      INNER JOIN catalogo_componentes CC ON CC.id_catalogo_componente = C.FK_id_catalogo_componentes
+      INNER JOIN marca M ON M.id_marca = CC.FK_id_marca_cata
+      INNER JOIN dispositivos D ON D.id_dispositivo = C.FK_id_dispositivo
+      INNER JOIN area A ON A.id_area = C.FK_id_area
+      INNER JOIN contrato CT ON CT.id_contrato = (
+          SELECT MAX(id_contrato) FROM contrato
+      )
+      INNER JOIN tecnico T ON T.id_tecnico = C.FK_IdTecnico
+      JOIN componente_factura AS CF ON CF.IdFactura = C.FK_Factura
+      WHERE ${whereClause}
+     ORDER BY C.codigo_TI`, camposBusqueda.map(() => `%${databusqueda}%`));
+
+    return result;
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error;
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+}
 
 async function consulta_NumSerie_CodigoTI(tabla, databusqueda) {
 
@@ -1371,6 +1425,30 @@ async function Consulta_Todos_Tecnicos(tabla, searchTerm) {
     }
   }
 }
+async function Consulta_Todos_Tecnicos_Activos(tabla, searchTerm) {
+  let connection;
+  try {
+    connection = await getConnection(); // Obtener conexión del pool
+    // Cambiar a SELECT completo para recuperar los datos (incluyendo el hash de la contraseña)
+    const [result] = await connection.query(
+      `SELECT id_tecnico, nombre, cargo, usuario, estatus_tecnico, IsAdmin 
+      FROM ${tabla}
+      WHERE estatus_tecnico = 'ACTIVO' 
+      AND (nombre LIKE ? OR cargo LIKE ? OR usuario LIKE ?) 
+      ORDER BY estatus_tecnico DESC`,
+      ['%' + searchTerm + '%', '%' + searchTerm + '%', '%' + searchTerm + '%']
+    );
+    // Si hay resultados, devolver el primer registro (objeto con los datos)
+    return result;
+  } catch (error) {
+    console.error("[db error]", error);
+    throw error; // Lanza el error para manejarlo más arriba
+  } finally {
+    if (connection) {
+      connection.release(); // Libera la conexión de vuelta al pool
+    }
+  }
+}
 async function Consulta_Por_Tecnico(tabla, id_tecnico) {
   let connection;
   try {
@@ -1704,6 +1782,7 @@ module.exports = {
   InventarioComponentesPorColectivo,
   verificarnumeroserieComponenteExistenciaDuplicadoArray,
   consultaComponentesColectivoArray,
+  consulta_Todos_Componentes_Busqueda,
   //UPDATE
   EditarComponenteFactura,
   EditarComponentePorID,
@@ -1777,6 +1856,7 @@ EditarResponsablePorIDConPassword,
   //CONSULTA
   Consulta_Todos_Tecnicos,
   Consulta_Por_Tecnico,
+  Consulta_Todos_Tecnicos_Activos,
   //EDITAR
   EditartecnicoPorIDConPassword,
   EditartecnicoPorIDSinPassword,
