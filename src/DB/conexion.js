@@ -418,6 +418,70 @@ async function consultaComponentesColectivoArray(tabla, componentes) {
   }
 }
 
+async function consultaBusquedaAvanzada(tabla, params) {
+  let connection;
+  try {
+    connection = await getConnection();
+    
+    //  Paginación
+    const pagina = parseInt(params.pagina) || 1;
+    const limite = Math.min(parseInt(params.limite) || 20, 100);
+    const offset = (pagina - 1) * limite;
+    
+    // 🛡️ Query dinámica
+    const queryData = db.construirQueryFiltros(params);
+    
+    const sql = `
+      SELECT SQL_CALC_FOUND_ROWS 
+        C.id_componente, C.codigo_TI, C.numero_serie, C.observaciones,
+        C.status_componente, C.status_inventario, C.FechaRegistro, C.FechaCompra,
+        U.id_unidad, U.nombre_unidad,
+        R.id_responsable, R.nombre_responsable,
+        A.id_area, A.area,
+        D.id_dispositivo, D.tipo_equipo,
+        M.id_marca, M.marca, M.modelo,
+        CC.id_catalogo_componente,
+        T.id_tecnico, T.nombre as tecnico_nombre
+      FROM ${tabla} C
+     INNER JOIN unidad U ON U.id_unidad = C.FK_id_unidad
+      INNER JOIN responsable R ON R.id_responsable = C.FK_id_responsable
+      INNER JOIN catalogo_componentes CC ON CC.id_catalogo_componente = C.FK_id_catalogo_componentes
+      INNER JOIN catalogo_componente_caracteristicas CCC ON CCC.Id_catalogo_caract=CC.FK_catalogo_caracteristicas
+      INNER JOIN cat_procesador CP ON CP.IdProcesador=CCC.ProcesadorID
+      INNER JOIN marca M ON M.id_marca = CC.FK_id_marca_cata
+      INNER JOIN dispositivos D ON D.id_dispositivo = C.FK_id_dispositivo
+      INNER JOIN area A ON A.id_area = C.FK_id_area
+      INNER JOIN tecnico T ON T.id_tecnico = C.FK_IdTecnico 
+      WHERE ${queryData.where}
+      ORDER BY C.codigo_TI ASC, C.numero_serie ASC
+      LIMIT ? OFFSET ?
+    `;
+    
+    const queryParams = [...queryData.params, limite, offset];
+    const [datos] = await connection.execute(sql, queryParams);
+    
+    // 📊 Total
+    const [total] = await connection.execute(
+      `SELECT COUNT(*) as total FROM ${tabla} C WHERE ${queryData.where}`, 
+      queryData.params
+    );
+    
+    return {
+      datos,
+      total: parseInt(total[0].total),
+      pagina,
+      totalPaginas: Math.ceil(parseInt(total[0].total) / limite)
+    };
+  } catch (error) {
+    console.error("[db avanzada error]", error);
+    throw error;
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+
+
 //UPDTATE
 async function EditarComponenteFactura(tabla, idComponente, data) {
   let connection;

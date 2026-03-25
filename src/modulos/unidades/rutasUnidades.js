@@ -3,11 +3,11 @@ const respuesta = require("../../red/respuestas"); // Importamos el archivo de r
 
 const router = express.Router();
 
-const controlador = require("./controladorUnidades"); // Importamos el controlador
+const controlador = require("./controladorUnidades"); 
 
 router.get("/ConsultaPorUnidadBusqueda", async function (req, res,next) {
   
-  const searchTerm =req.query.searchTerm; // Obtenemos el ID de la Unidad desde la consulta
+  const searchTerm =req.query.searchTerm;
   
 
   

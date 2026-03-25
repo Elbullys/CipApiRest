@@ -54,7 +54,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 // MIDDLEWARES
-app.use(morgan('dev'));  // Cambiado: 'combined' en prod para logs más limpiosprocess.env.NODE_ENV === 'production' ? 
+app.use(morgan('combined'));  //"dev" Cambiado: 'combined' en prod para logs más limpiosprocess.env.NODE_ENV === 'production' ? 
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -67,7 +67,7 @@ app.set('port', config.app.port);
 
 // RUTAS
 app.use('/api/componentes', componentes);
-app.use('/api/unidades',requireAuth, unidades);
+app.use('/api/unidades', unidades);
 app.use('/api/areas', requireAuth,areas);
 app.use('/api/dispositivos', requireAuth, dispositivos);
 app.use('/api/MarcaModelo', requireAuth, MarcaModelo);

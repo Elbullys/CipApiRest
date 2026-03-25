@@ -171,6 +171,33 @@ function ctl_consulta_Todos_Componentes_Busqueda(databusqueda) {
   return db.consulta_Todos_Componentes_Busqueda(TABLA, databusqueda);
 }
 
+
+// ========================================
+// CONTROLADOR (AGREGAR ESTAS FUNCIONES)
+// ========================================
+async function ctl_buscarAvanzado(params) {
+  try {
+    // 🛡️ VALIDAR Y CONSTRUIR QUERY AQUÍ
+    const queryData = ctl_construirQueryFiltros(params);
+    
+    // 📤 Mandar SOLO lo necesario a DB
+    const resultado = await db.consultaBusquedaAvanzadaSql(
+      TABLA, 
+      queryData.where, 
+      queryData.params,
+      params.pagina || 1,
+      params.limite || 20
+    );
+    
+    return resultado;
+  } catch (error) {
+    console.error("[ctl_buscarAvanzado error]", error);
+    throw error;
+  }
+}
+
+
+
 /**/ /////////////////////////////////////////////////////////////////////////////////////////////////// */
 //UPDATE
 /**/ /////////////////////////////////////////////////////////////////////////////////////////////////// */
@@ -588,6 +615,72 @@ const respuesta = sets[0];
     }
     
   }
+}
+
+/**/ /////////////////////////////////////////////////////////////////////////////////////////////////// */
+//FUNCIONES ADICIONALES
+/**/ /////////////////////////////////////////////////////////////////////////////////////////////////// */
+
+function ctl_construirQueryFiltros(params) {
+  let where = '1=1';
+  const queryParams = [];
+  
+  // 🔍 Validar y sanitizar CADA filtro
+  if (params.codigo_TI && params.codigo_TI.trim()) {
+    where += ' AND C.codigo_TI LIKE ?';
+    queryParams.push(`%${params.codigo_TI.trim()}%`);
+  }
+  
+  if (params.numero_serie && params.numero_serie.trim()) {
+    where += ' AND C.numero_serie LIKE ?';
+    queryParams.push(`%${params.numero_serie.trim()}%`);
+  }
+  
+  if (params.id_tecnico && !isNaN(params.id_tecnico)) {
+    where += ' AND C.FK_IdTecnico = ?';
+    queryParams.push(parseInt(params.id_tecnico));
+  }
+  
+  if (params.id_unidad && !isNaN(params.id_unidad)) {
+    where += ' AND C.FK_id_unidad = ?';
+    queryParams.push(parseInt(params.id_unidad));
+  }
+
+   if (params.id_area && !isNaN(params.id_area)) {
+    where += ' AND C.id_area = ?';
+    queryParams.push(parseInt(params.id_area));
+  }
+  
+  if (params.id_responsable && !isNaN(params.id_responsable)) {
+    where += ' AND C.FK_id_responsable = ?';
+    queryParams.push(parseInt(params.id_responsable));
+  }
+
+    if (params.id_dispositivo && !isNaN(params.id_dispositivo)) {
+    where += ' AND C.FK_id_dispositivo = ?';
+    queryParams.push(parseInt(params.id_dispositivo));
+  }
+   if (params.id_marca && !isNaN(params.id_marca)) {
+    where += ' AND C.FK_id_marca_cata = ?';
+    queryParams.push(parseInt(params.id_marca));
+  }
+   if (params.id_marca && !isNaN(params.id_marca)) {
+    where += ' AND C.id_marca = ?';
+    queryParams.push(parseInt(params.id_marca));
+  }
+   if (params.id_marca && !isNaN(params.id_marca)) {
+    where += ' AND C.id_marca = ?';
+    queryParams.push(parseInt(params.id_marca));
+  }
+  
+  if (params.status_componente) {
+    where += ' AND C.status_componente = ?';
+    queryParams.push(params.status_componente);
+  }
+  
+ 
+  
+  return { where, params: queryParams };
 }
 
 module.exports = {

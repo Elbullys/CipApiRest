@@ -119,6 +119,18 @@ router.get("/ConsultaComponentes", async function (req, res, next) {
   }
 });
 
+// Ruta para obtener todos los items POR MEDIO DE FILTRADO AVANZADO
+router.post("/buscarPorFiltroComponenteAvanzado", async function (req, res, next) {
+  try {
+    const params = req.body;
+    const resultado = await controlador.ctl_buscarAvanzado(params);
+    respuesta.success(req, res, resultado, 200);
+    // Llamamos al método todos del controlador
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 /****************************************************************************************************** */
 //UPDATE
