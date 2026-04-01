@@ -1,6 +1,6 @@
 const db= require('../../DB/conexion');
 
-const TABLA= 'cat_memoria_ram';
+const TABLA= 'Cat_memoria_ram';
 //consulta_ALL_dispositivos
 /*
 async function ctl_consulta_TODOS_dispositivos(){

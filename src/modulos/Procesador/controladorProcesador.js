@@ -1,6 +1,6 @@
 const db= require('../../DB/conexion');
 
-const TABLA= 'cat_procesador';
+const TABLA= 'Cat_procesador';
 //consulta_ALL_dispositivos
 /*
 async function ctl_consulta_TODOS_dispositivos(){

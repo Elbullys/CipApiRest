@@ -1,6 +1,6 @@
 const db= require('../../DB/conexion');
 
-const TABLA= 'cat_sistema_operativo';
+const TABLA= 'Cat_sistema_operativo';
 //consulta_ALL_dispositivos
 /*
 async function ctl_consulta_TODOS_dispositivos(){
